@@ -10,3 +10,7 @@
 .md-typeset {
   font-size: 16pt;
 }
+
+.md-typeset code {
+  font-size: 12pt;
+}
