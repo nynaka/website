@@ -18,6 +18,7 @@ nav:
 
   - "言語":
     - Python:
+      - OCI SDK: lang/python/oci_sdk_python.md
       - PyKCS11: lang/python/pykcs11.md
       - python-pkcs11: lang/python/python-pkcs11.md
 
