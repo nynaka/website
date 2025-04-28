@@ -24,8 +24,12 @@ nav:
       - python-pkcs11: lang/python/python-pkcs11.md
 
   - "仮想化":
+    - Containerd:
+      - Containerd: virtualization/containerd.md
+      - KataContainer: virtualization/containerd_katacontainer.md
     - LXC: virtualization/lxc.md
     - QEMU: virtualization/qemu.md
+    - Proxmox: virtualization/proxmox.md
     - KVM:
       - "環境準備": virtualization/kvm/01_prepare.md
       - "Gateway VM": virtualization/kvm/02_gateway_vm.md
@@ -39,6 +43,16 @@ nav:
       - 自己証明書: app/openssl_self-certification.md
     - SoftHSM: app/softhsm.md
     - Tripwire: app/tripwire.md
+    - vim:
+      - ctags: app/vim_ctags.md
+    - Linux Tools:
+      - sysstat: app/linux/sysstat.md
+
+  - "クラウドサービス":
+    - AWS:
+      - localstack: cloudservice/aws/localstack.md
+    - OCI:
+      - OCI SDK: lang/python/oci_sdk_python.md
 
 theme:
   name: material
