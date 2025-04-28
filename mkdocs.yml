@@ -9,6 +9,7 @@ nav:
       - Fedora 40 Server: os/linux/fedora_40_server.md
       - XUbutnu 22.04: os/linux/xubuntu_2204.md
     - MacOS Tips: os/macos/macos_tips.md
+    - Windows Tips: os/windows/windows_tips.md
 
   - Server:
     - PostgreSQL: server/postgresql.md
