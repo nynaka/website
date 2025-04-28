@@ -1,0 +1,52 @@
+@startuml
+
+!include <office/Servers/application_server>
+<style>
+nwdiagDiagram {
+    FontSize 16
+    group {
+        BackGroundColor cadetblue
+        LineColor black
+        LineThickness 2.0
+        FontSize 16
+        FontStyle bold
+        Margin 5
+        Padding 5
+    }
+}
+</style>
+nwdiag {
+    network LAN {
+        nat [description = "     NAT\n(KVM Host)"];
+    }
+    network virbr0 {
+        address = "192.168.122.0/24";
+        nat [address = "192.168.122.1", description = "     NAT\n(KVM Host)"];
+        vyos [address = "192.168.122.x"];
+    }
+
+    network virbr1 {
+        address = "192.168.123.0/24\nDHCP";
+        vyos [address= "192.168.123.1", description = "<&cog*4>\n vyos"];
+        vm1 [address = "", description = "  <$application_server>\nDebian\n  Linux"];
+        vm2 [address = "", description = " <$application_server>\nUbuntu\n  Linux"];
+        vm3 [address = "", description = "  <$application_server>\nFedora\n  Linux"];
+        vm4 [address = "", description = " <$application_server>\n  Free\n  BSD"];
+        vm5 [address = "", description = " <$application_server>\n Net\nBSD"];
+        vm6 [address = "", description = "     <$application_server>\n Windows\n     VM"];
+    }
+
+    group {
+        description = "KVM";
+        color = "#BBBBFF";
+        vyos;
+        vm1;
+        vm2;
+        vm3;
+        vm4;
+        vm5;
+        vm6;
+    }
+}
+
+@enduml

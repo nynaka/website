@@ -23,6 +23,16 @@ nav:
       - PyKCS11: lang/python/pykcs11.md
       - python-pkcs11: lang/python/python-pkcs11.md
 
+  - "仮想化":
+    - LXC: virtualization/lxc.md
+    - QEMU: virtualization/qemu.md
+    - KVM:
+      - "環境準備": virtualization/kvm/01_prepare.md
+      - "Gateway VM": virtualization/kvm/02_gateway_vm.md
+      - "Linux VM": virtualization/kvm/03_linux_vm.md
+      - "BSD VM (まだ起動できない)": virtualization/kvm/03_bsd_vm.md
+      - "Windows VM (まだ起動できない)": virtualization/kvm/03_windows_vm.md
+
   - "アプリケーション":
     - ClamAV: app/clamav.md
     - OpenSSL:
