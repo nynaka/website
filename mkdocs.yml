@@ -30,6 +30,17 @@ nav:
     - LXC: virtualization/lxc.md
     - QEMU: virtualization/qemu.md
     - Proxmox: virtualization/proxmox.md
+    - Kubernetes:
+      - minikube: virtualization/k8s/minikube.md
+      - "Kubernetes環境設定": virtualization/k8s/kubernetes_env.md
+      - kubeadm:
+        - kubeadm: virtualization/k8s/kubeadm.md
+        - ControlPlane: virtualization/k8s/kubernetes_controlplane.md
+        - WorkerNode: virtualization/k8s/kubernetes_workernode.md
+        - Pod: virtualization/k8s/kubernetes_01_pod.md
+        - Service: virtualization/k8s/kubernetes_02_service.md
+        - Namespace: virtualization/k8s/kubernetes_03_namespace.md
+
     - KVM:
       - "環境準備": virtualization/kvm/01_prepare.md
       - "Gateway VM": virtualization/kvm/02_gateway_vm.md
