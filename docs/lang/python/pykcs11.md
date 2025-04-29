@@ -143,9 +143,8 @@
 
 ```python
 import binascii
-import secrets
 
-from PyKCS11 import PyKCS11
+import PyKCS11
 
 """ 設定 """
 # PKCS11 モジュールのパス
@@ -155,58 +154,168 @@ PKCS11_LIB = "/usr/lib/softhsm/libsofthsm2.so"
 PIN = "1234"
 
 # 暗号化対称データ
-plaintext = b"I hate working overtime..."
+plaintext = b"plaintext data" * 4
 """ 設定 """
 
-# PKCS11 モジュールをロード
-pkcs11 = PyKCS11.PyKCS11Lib()
-pkcs11.load(PKCS11_LIB)
 
-# スロットを取得し、セッションを開始
-slot = pkcs11.getSlotList(tokenPresent=True)[0]
-session = pkcs11.openSession(slot, PyKCS11.CKF_RW_SESSION | PyKCS11.CKF_SERIAL_SESSION)
+def encrypt(
+    session: PyKCS11.Session,
+    key_handle: PyKCS11.CK_OBJECT_HANDLE,
+    mechanism: str,
+    plaintext: bytes,
+    verbose: bool = True,
+) -> dict:
+    if mechanism == "AES_CBC_PAD":
+        # 16バイトのランダムな初期化ベクタを生成
+        iv = session.generateRandom(16)
+        # AES CBC パディング
+        enc_mechanism = PyKCS11.Mechanism(PyKCS11.CKM_AES_CBC_PAD, iv)
+        # 暗号化
+        ciphertext = session.encrypt(key_handle, plaintext, enc_mechanism)
+        return_data = {"ciphertext": ciphertext, "iv": iv}
 
-# ログイン
-session.login(PIN)
+    elif mechanism == "AES_CTR":
+        CTR_BITS = 128
+        # CTR の初期化ベクタを生成
+        iv = session.generateRandom(CTR_BITS // 8)
+        # AES CTR
+        enc_mechanism = PyKCS11.AES_CTR_Mechanism(CTR_BITS, iv)
+        # 暗号化
+        ciphertext = session.encrypt(key_handle, plaintext, enc_mechanism)
+        return_data = {"ciphertext": ciphertext, "ctr_bits": CTR_BITS, "iv": iv}
 
-# AES 256 キーを作成
-key_template = [
-    (PyKCS11.CKA_LABEL, "aes-key"),
-    (PyKCS11.CKA_ID, binascii.unhexlify("9876")),
-    (PyKCS11.CKA_VALUE_LEN, 32),  # 32バイト = 256ビット
-    (PyKCS11.CKA_ENCRYPT, PyKCS11.CK_TRUE),
-    (PyKCS11.CKA_DECRYPT, PyKCS11.CK_TRUE),
-    (PyKCS11.CKA_TOKEN, PyKCS11.CK_TRUE),  # トークンに保存
-    (PyKCS11.CKA_PRIVATE, PyKCS11.CK_TRUE),
-]
-# AES-256 対称鍵の生成
-key_handle = session.generateKey(key_template)
+    elif mechanism == "AES_GCM":
+        # GCM の初期化ベクタを生成
+        iv = session.generateRandom(12)
+        aad = session.generateRandom(16)
+        tagBits = 128
+        # AES GCM
+        enc_mechanism = PyKCS11.AES_GCM_Mechanism(iv, aad, tagBits)
+        # 暗号化
+        ciphertext = session.encrypt(key_handle, plaintext, enc_mechanism)
+        return_data = {
+            "ciphertext": ciphertext,
+            "iv": iv,
+            "aad": aad,
+            "tagBits": tagBits,
+        }
 
-""" 暗号化・復号 """
-# イニシャルベクタ (16バイト)
-# iv = b"\x00" * 16
-iv = secrets.token_bytes(16)
+    if verbose:
+        print("return_data:", return_data)
 
-# 暗号化
-enc_mechanism = PyKCS11.Mechanism(PyKCS11.CKM_AES_CBC_PAD, iv)
-ciphertext = session.encrypt(key_handle, plaintext, enc_mechanism)
-print("Encrypted:", binascii.hexlify(bytearray(ciphertext)))
+    return return_data
 
-# 復号
-decrypted = session.decrypt(key_handle, ciphertext, enc_mechanism)
 
-print("Decrypted:", decrypted)
-# print(bytes(decrypted).decode("utf-8"))
+def decrypt(
+    session: PyKCS11.Session,
+    key_handle: PyKCS11.CK_OBJECT_HANDLE,
+    mechanism: str,
+    encrypted_data: dict,
+    verbose: bool = True,
+):
+    if mechanism == "AES_CBC_PAD":
+        iv = encrypted_data["iv"]
+        ciphertext = encrypted_data["ciphertext"]
 
-# 暗号化・復号の検証
-assert plaintext == bytes(decrypted)
+        # AES CBC パディング
+        enc_mechanism = PyKCS11.Mechanism(PyKCS11.CKM_AES_CBC_PAD, iv)
+        # 復号
+        plaintext_data_array = session.decrypt(key_handle, ciphertext, enc_mechanism)
 
-# 鍵削除
-session.destroyObject(key_handle)
+    elif mechanism == "AES_CTR":
+        iv = encrypted_data["iv"]
+        ctr_bits = encrypted_data["ctr_bits"]
+        ciphertext = encrypted_data["ciphertext"]
+        # AES CTR
+        enc_mechanism = PyKCS11.AES_CTR_Mechanism(ctr_bits, iv)
+        # 復号
+        plaintext_data_array = session.decrypt(key_handle, ciphertext, enc_mechanism)
 
-# セッションを閉じる
-session.logout()
-session.closeSession()
+    elif mechanism == "AES_GCM":
+        iv = encrypted_data["iv"]
+        aad = encrypted_data["aad"]
+        tagBits = encrypted_data["tagBits"]
+        ciphertext = encrypted_data["ciphertext"]
+        # AES GCM
+        enc_mechanism = PyKCS11.AES_GCM_Mechanism(iv, aad, tagBits)
+        # 復号
+        plaintext_data_array = session.decrypt(key_handle, ciphertext, enc_mechanism)
+
+    if verbose:
+        print("return_data:", plaintext_data_array)
+
+    return plaintext_data_array
+
+
+if __name__ == "__main__":
+    pkcs11 = PyKCS11.PyKCS11Lib()
+    # PKCS11 ライブラリのロード
+    pkcs11.load(PKCS11_LIB)
+
+    # スロットを取得し、セッションを開始
+    slot = pkcs11.getSlotList(tokenPresent=True)[0]
+    session = pkcs11.openSession(
+        slot, PyKCS11.CKF_RW_SESSION | PyKCS11.CKF_SERIAL_SESSION
+    )
+
+    # ログイン
+    session.login(PIN)
+
+    # AES 256 キーを作成
+    key_template = [
+        (PyKCS11.CKA_CLASS, PyKCS11.CKO_SECRET_KEY),
+        (PyKCS11.CKA_KEY_TYPE, PyKCS11.CKK_AES),
+        (PyKCS11.CKA_TOKEN, PyKCS11.CK_TRUE),
+        (PyKCS11.CKA_LABEL, "aes-key"),
+        (PyKCS11.CKA_ID, binascii.unhexlify("9876")),
+        (PyKCS11.CKA_VALUE_LEN, 32),  # 32バイト = 256ビット
+        (PyKCS11.CKA_PRIVATE, PyKCS11.CK_FALSE),
+        (PyKCS11.CKA_ENCRYPT, PyKCS11.CK_TRUE),
+        (PyKCS11.CKA_DECRYPT, PyKCS11.CK_TRUE),
+        (PyKCS11.CKA_SIGN, PyKCS11.CK_FALSE),
+        (PyKCS11.CKA_VERIFY, PyKCS11.CK_FALSE),
+    ]
+    # AES-256 対称鍵の生成
+    key_handle = session.generateKey(key_template)
+
+    """ AES_CBC_PAD """
+    encrypted_data = encrypt(
+        session, key_handle, "AES_CBC_PAD", plaintext, verbose=False
+    )
+    decrypted_data_array = decrypt(
+        session, key_handle, "AES_CBC_PAD", encrypted_data, verbose=False
+    )
+    decrypted_data = bytes(decrypted_data_array)
+    print("AES_CBC_PAD decrypt: ", decrypted_data)
+    # 暗号化・復号の検証
+    assert plaintext == decrypted_data
+
+    """ AES_CTR """
+    encrypted_data = encrypt(session, key_handle, "AES_CTR", plaintext, verbose=False)
+    decrypted_data_array = decrypt(
+        session, key_handle, "AES_CTR", encrypted_data, verbose=False
+    )
+    decrypted_data = bytes(decrypted_data_array)
+    print("AES_CTR decrypt: ", decrypted_data)
+    # 暗号化・復号の検証
+    assert plaintext == decrypted_data
+
+    """ AES_GCM """
+    encrypted_data = encrypt(session, key_handle, "AES_GCM", plaintext, verbose=False)
+    decrypted_data_array = decrypt(
+        session, key_handle, "AES_GCM", encrypted_data, verbose=False
+    )
+    decrypted_data = bytes(decrypted_data_array)
+    print("AES_GCM decrypt: ", decrypted_data)
+    # 暗号化・復号の検証
+    assert plaintext == decrypted_data
+
+    # 鍵削除
+    session.destroyObject(key_handle)
+
+    # セッションを閉じる
+    session.logout()
+    session.closeSession()
 ```
 
 </details>
@@ -228,7 +337,7 @@ PKCS11_LIB = "/usr/lib/softhsm/libsofthsm2.so"
 PIN = "1234"
 
 # 暗号化対称データ
-plaintext = b"I hate working overtime..."
+plaintext = b"plaintext data" * 4
 """ 設定 """
 
 
