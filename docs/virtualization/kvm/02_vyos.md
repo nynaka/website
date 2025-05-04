@@ -1,9 +1,5 @@
-Gateway VM
+[VyOS](https://vyos.io/)
 ===
-
-Gateway には [VyOS](https://vyos.io/) を使います。
-
-## [VyOS](https://vyos.io/)
 
 ChatGPT によると、
 
