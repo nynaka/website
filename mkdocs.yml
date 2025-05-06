@@ -17,6 +17,7 @@ nav:
     - Samba: server/samba.md
     - SSH:
       - 公開鍵認証: server/ssh_public_key_authentication.md
+    - LAN回線速度チェック: server/lan_speed_check.md
 
   - "言語":
     - Python:
@@ -87,7 +88,7 @@ theme:
         name: Switch to light mode
   features:
     # ナビゲーションのグループ化表示制御
-    - navigation.sections
+    #- navigation.sections
     # コードブロックのコピーボタン
     - content.code.copy
 
