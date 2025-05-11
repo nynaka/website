@@ -13,6 +13,7 @@ nav:
     - Windows Tips: os/windows/windows_tips.md
 
   - Server:
+    - GitLab: server/gitlab_container.md
     - PostgreSQL: server/postgresql.md
     - Samba: server/samba.md
     - SSH:
@@ -20,6 +21,8 @@ nav:
     - LAN回線速度チェック: server/lan_speed_check.md
 
   - "言語":
+    - C:
+      - "Ubuntu22.04のcoreファイル出力": lang/c/corefile_ubuntu2404.md
     - Python:
       - OCI SDK: lang/python/oci_sdk_python.md
       - PyKCS11: lang/python/pykcs11.md
