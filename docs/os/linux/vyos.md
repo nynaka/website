@@ -39,7 +39,54 @@ wget \
 
 ## 設定
 
-VyOS ログインして下記の設定をします。
+!!! warning
+    特定のバージョン依存かもしれませんが、一部の設定項目で、識別名に相当する設定項目に「_」（アンダーバー／アンダースコア）を設定使用とするとエラーになるようです。DHCP の static-mapping につける名称で使用したところ、エラーになりました。
+
+VyOS ログインして下記の設定をします。ここでは下記のような構成のネットワークを想定しています。
+
+![](./vyos/fig_network.png)
+
+
+### SSH 公開鍵の設定方法
+
+VyOS の設定は、直接コンソールからでも可能ですが、SSH を設定しておいた方が何かと便利なので公開鍵での SSH ログイン設定をしておきます。直接コンソールで設定派の方は、SSH 設定不要です。
+
+- キーペアの作成
+    - ed25519
+
+        ```bash
+        ssh-keygen -t ed25519 -C "comment"
+        ```
+
+    - RSA
+
+        ```bash
+        ssh-keygen -t rsa -b 4096
+        ```
+
+- 公開鍵の登録
+
+    上記コマンドでキーペアを作成すると、公開鍵は $HOME/.ssh/id_ed25519.pub/id_rsa.pub に下記の形式で出力されます。
+
+    ```text title="公開鍵の形式"
+    鍵タイプ 公開鍵の値 コメント
+    ```
+
+    VyOS への公開鍵の登録は、下記のコマンドで行います。
+
+    ```bash
+    set system login user vyos authentication public-keys コメント key "公開鍵の値"
+    set system login user vyos authentication public-keys コメント type 鍵タイプ
+    ```
+
+
+### Internet Gateway の設定
+
+### Internal Router の設定
+
+
+
+---
 
 - 各インタフェースの設定
 - DHCP 設定
@@ -70,33 +117,3 @@ $ configure
 # commit
 # save
 ```
-
-### SSH 公開鍵の設定方法
-
-- キーペアの作成
-    - ed25519
-
-        ```bash
-        ssh-keygen -t ed25519 -C "comment"
-        ```
-
-    - RSA
-
-        ```bash
-        ssh-keygen -t rsa -b 4096
-        ```
-
-- 公開鍵の登録
-
-    上記コマンドでキーペアを作成すると、公開鍵は $HOME/.ssh/id_ed25519.pub/id_rsa.pub に下記の形式で出力されます。
-
-    ```text title="公開鍵の形式"
-    鍵タイプ 公開鍵の値 コメント
-    ```
-
-    VyOS への公開鍵の登録は、下記のコマンドで行います。
-
-    ```bash
-    set system login user vyos authentication public-keys コメント key "公開鍵の値"
-    set system login user vyos authentication public-keys コメント type 鍵タイプ
-    ```

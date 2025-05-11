@@ -1,0 +1,24 @@
+@startuml
+!include <office/Servers/application_server>
+
+nwdiag {
+    Internet [shape = cloud];
+    Internet -- router1;
+
+    network public_subnet {
+        address = "10.1.1.0/24";
+        router1 [address = "10.1.1.1" description = "  <&cog*4>\nInternet\nGataway\n (VyOS)"];
+        router2 [address = "10.1.1.254" description = "  <&cog*4>\nInternal\nRouter\n (VyOS)"];
+
+        server1 [address = "10.1.1.x" description = "<$application_server>\n Server"];
+    }
+
+    network private_subnet {
+        address = "10.1.2.0/24";
+        router2 [address = "10.1.2.1" description = "  <&cog*4>\nInternal\nRouter\n (VyOS)"];
+
+        client [address = "10.1.2.x" description = "  <&person*5>\n Client PC"];
+    }
+}
+
+@enduml
