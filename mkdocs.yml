@@ -23,6 +23,7 @@ nav:
   - "言語":
     - C:
       - "Ubuntu22.04のcoreファイル出力": lang/c/corefile_ubuntu2404.md
+      - PKCS11: lang/c/pkcs11_c.md
     - Python:
       - OCI SDK: lang/python/oci_sdk_python.md
       - PyKCS11: lang/python/pykcs11.md
