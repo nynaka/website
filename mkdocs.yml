@@ -20,15 +20,6 @@ nav:
       - 公開鍵認証: server/ssh_public_key_authentication.md
     - LAN回線速度チェック: server/lan_speed_check.md
 
-  - "言語":
-    - C:
-      - "Ubuntu22.04のcoreファイル出力": lang/c/corefile_ubuntu2404.md
-      - PKCS11: lang/c/pkcs11_c.md
-    - Python:
-      - OCI SDK: lang/python/oci_sdk_python.md
-      - PyKCS11: lang/python/pykcs11.md
-      - python-pkcs11: lang/python/python-pkcs11.md
-
   - "仮想化":
     - Containerd:
       - Containerd: virtualization/containerd.md
@@ -54,7 +45,7 @@ nav:
       - "BSD VM (まだ起動できない)": virtualization/kvm/03_bsd_vm.md
       - "Windows VM (まだ起動できない)": virtualization/kvm/03_windows_vm.md
 
-  - "アプリケーション":
+  - "アプリ":
     - ClamAV: app/clamav.md
     - OpenSSL:
       - 自己証明書: app/openssl_self-certification.md
@@ -70,6 +61,21 @@ nav:
       - localstack: cloudservice/aws/localstack.md
     - OCI:
       - OCI SDK: lang/python/oci_sdk_python.md
+
+  - Ethereum:
+    - Web3Signer:
+      - "Web3Signerの署名動作確認": ./ethereum/web3signer_file-keystore.md
+      - "Web3Signer(Hardhat)": ./ethereum/web3signer_hardhat.md
+
+  - "言語":
+    - C:
+      - "Ubuntu22.04のcoreファイル出力": ./lang/c/corefile_ubuntu2404.md
+      - PKCS11: ./lang/c/pkcs11_c.md
+    - Python:
+      - OCI SDK: ./lang/python/oci_sdk_python.md
+      - PyKCS11: ./lang/python/pykcs11.md
+      - python-pkcs11: ./lang/python/python-pkcs11.md
+      - "ECDSA Secp256k1 Sign-Verify サンプルコード": ./lang/python/secp256k1_sign_verify.md
 
 theme:
   name: material

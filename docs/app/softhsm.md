@@ -3,21 +3,36 @@
 
 ## インストール
 
-- ビルドツールのインストール
+- Debian 系 Linux (Debian Linux、Ubuntu Linux 他)
 
     ```bash
-    sudo apt install -y build-essential autoconf libtool libssl-dev
+    sudo apt install -y softhsm2 opensc
     ```
 
-- ソースからビルドする
+- Redhat 系 Linux (Fedora、Alma Linux、Rocky Linux)
 
     ```bash
-    git clone https://github.com/softhsm/SoftHSMv2
-    cd SoftHSMv2
-    ./autogen.sh
-    ./configure --enable-ecc --enable-eddsa
-    make && sudo make install
+    sudo dnf install -y softhsm opensc
     ```
+
+- ソースからビルドする場合
+
+    - ビルドツールのインストール
+
+        ```bash
+        sudo apt install -y build-essential autoconf libtool libssl-dev
+        ```
+
+    - ソースからビルドする
+
+        ```bash
+        git clone https://github.com/softhsm/SoftHSMv2
+        cd SoftHSMv2
+        ./autogen.sh
+        ./configure --enable-ecc --enable-eddsa
+        make && sudo make install
+        ```
+
 
 ## PKCS11 での操作
 
@@ -51,6 +66,38 @@
     ```bash
     pkcs11-tool --module /usr/local/lib/softhsm/libsofthsm2.so -L
     ```
+
+- 鍵作成
+
+    - 対称鍵
+
+        ```bash
+        sudo pkcs11-tool --module $LIBPATH \
+            --keygen \
+            --key-type AES:32 \
+            --label "aeskey" \
+            --login --pin 4321
+        ```
+
+    - RSA キーペア
+
+        ```bash
+        sudo pkcs11-tool --module $LIBPATH \
+            --keypairgen \
+            --key-type rsa:2048 \
+            --label "rsakey" \
+            --login --pin 4321
+        ```
+
+    - ECDSA キーペア
+
+        ```bash
+        sudo pkcs11-tool --module $LIBPATH \
+            --keypairgen \
+            --key-type EC:prime256v1 \
+            --label "ecdsakey" \
+            --login --pin 4321
+        ```
 
 - 登録鍵一覧の取得
 
