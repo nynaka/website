@@ -71,11 +71,17 @@ nav:
     - C:
       - "Ubuntu22.04のcoreファイル出力": ./lang/c/corefile_ubuntu2404.md
       - PKCS11: ./lang/c/pkcs11_c.md
+    - Nodejs:
+      - "Node.jsのインストール": ./lang/nodejs/nodejs_install.md
+      - "Hello TypeScript": ./lang/nodejs/hello_typescript.md
     - Python:
       - OCI SDK: ./lang/python/oci_sdk_python.md
       - PyKCS11: ./lang/python/pykcs11.md
       - python-pkcs11: ./lang/python/python-pkcs11.md
       - "ECDSA Secp256k1 Sign-Verify サンプルコード": ./lang/python/secp256k1_sign_verify.md
+
+    - Cython:
+      - "Hello Cython": ./lang/cython/01_hello_cython.md
 
 theme:
   name: material
