@@ -13,6 +13,7 @@ nav:
     - Windows:
       - Windows Tips: os/windows/windows_tips.md
       - "Windows Subsystem for Linux (WSL)": ./os/windows/windows_subsystem_for_linux.md
+      - "Hyper-V in Windows 11": ./os/windows/hyper-v_windows11.md
 
   - Server:
     - GitLab: server/gitlab_container.md
@@ -26,6 +27,7 @@ nav:
     - Containerd:
       - Containerd: virtualization/containerd.md
       - KataContainer: virtualization/containerd_katacontainer.md
+    - Docker: virtualization/docker.md
     - LXC: virtualization/lxc.md
     - QEMU: virtualization/qemu.md
     - Proxmox: virtualization/proxmox.md
