@@ -50,7 +50,9 @@ nav:
       - "Windows VM (まだ起動できない)": virtualization/kvm/03_windows_vm.md
 
   - "アプリ":
+    - Ansible: app/ansible.md
     - ClamAV: app/clamav.md
+    - Ollama: app/ollama.md
     - OpenSSL:
       - 自己証明書: app/openssl_self-certification.md
     - SoftHSM: app/softhsm.md
