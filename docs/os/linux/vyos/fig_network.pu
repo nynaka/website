@@ -22,3 +22,23 @@ nwdiag {
 }
 
 @enduml
+
+
+
+@startuml
+!include <office/Servers/application_server>
+
+nwdiag {
+    Internet [shape = cloud description = "    Hyper-V\nDefault Switch"];
+    Internet -- router1;
+
+    network subnet {
+        address = "10.1.1.0/24";
+        router1 [address = "10.1.1.1" description = "  <&cog*4>\nInternet\nGataway\n (VyOS)"];
+
+        server1 [address = "10.1.1.x" description = "<$application_server>\n Linux"];
+        server2 [address = "10.1.1.x" description = "<$application_server>\n  BSD"];
+    }
+}
+
+@enduml

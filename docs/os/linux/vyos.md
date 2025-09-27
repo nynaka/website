@@ -13,8 +13,8 @@ ChatGPT によると、
 
 ```bash
 wget \
-    https://github.com/vyos/vyos-nightly-build/releases/download/2025.05.04-0021-rolling/vyos-2025.05.04-0021-rolling-generic-amd64.iso \
-    -O /tmp/vyos-2025.05.04-0021-rolling-generic-amd64.iso
+    https://github.com/vyos/vyos-nightly-build/releases/download/2025.09.10-0018-rolling/vyos-2025.09.10-0018-rolling-generic-amd64.iso \
+    -O /tmp/vyos-2025.09.10-0018-rolling-generic-amd64.iso
 ```
 
 ## VyOS のインストール
