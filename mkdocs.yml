@@ -17,6 +17,7 @@ nav:
 
   - Server:
     - GitLab: server/gitlab_container.md
+    - "Keycloak Samba AD Windows SSO": ./server/keycloak/ad_sso_samba.md
     - PostgreSQL: server/postgresql.md
     - Samba: server/samba.md
     - SSH:
