@@ -73,13 +73,11 @@ PostgreSQL
             ```
 
 
-- Debian系
-    - Debian Linux 12
-    - Ubuntu Linux 22.04
+- Ubuntu Linux / Debian Linux
 
-        ```bash
-        sudo apt install -y postgresql postgresql-contrib
-        ```
+    ```bash
+    sudo apt install -y postgresql postgresql-contrib
+    ```
 
 - サーバ起動設定
 
