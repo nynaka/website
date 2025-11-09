@@ -3,7 +3,7 @@ Docker
 
 ## インストール
 
-### [Ubuntu](https://docs.docker.com/engine/install/ubuntu/)
+### [Debian](https://docs.docker.com/engine/install/debian/) / [Ubuntu](https://docs.docker.com/engine/install/ubuntu/)
 
 1. 古いバージョンの削除 (インストールしていた場合)
 
@@ -34,12 +34,23 @@ Docker
 
     - リポジトリの追加
 
-        ```bash
-        echo \
-            "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-            $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-            sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-        ```
+        - Debian
+
+            ```bash
+            echo \
+                "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
+                $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+                sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+            ```
+
+        - Ubuntu
+
+            ```bash
+            echo \
+                "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+                $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+                sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+            ```
 
 3. Docker のインストール
 
