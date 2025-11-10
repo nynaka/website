@@ -47,7 +47,7 @@ sudo apt install -y \
     dnsutils
 ```
 
-krb5-user インストール途中で EXAMPLE.LOCAL をKERBEROS REALMとして入力。
+krb5-user インストール途中で KERBEROS 関連の REALM として EXAMPLE.LOCAL を入力する。3 回くらい聞かれます。
 
 ### IP アドレスの固定
 
@@ -61,7 +61,7 @@ krb5-user インストール途中で EXAMPLE.LOCAL をKERBEROS REALMとして�
       dhcp4: no
       addresses:
         - 192.168.222.10/24
-      gateway4: 192.168.222.1
+      gateway4: 192.168.222.2
       nameservers:
         addresses:
           - 127.0.0.1
@@ -114,6 +114,7 @@ krb5-user インストール途中で EXAMPLE.LOCAL をKERBEROS REALMとして�
     ```bash
     sudo systemctl stop systemd-resolved
     sudo systemctl disable systemd-resolved
+    sudo rm /etc/resolve.conf    # 一度消した方がよいかもしれない
     ```
 
 - AD 関連プロセスの起動
@@ -124,7 +125,7 @@ krb5-user インストール途中で EXAMPLE.LOCAL をKERBEROS REALMとして�
     sudo systemctl status samba-ad-dc
     ```
 
-### 参照する DNS を自分自身へ向ける
+### DNS の参照を自分自身へ向ける
 
 - /etc/resolv.conf
 
@@ -164,11 +165,12 @@ krb5-user インストール途中で EXAMPLE.LOCAL をKERBEROS REALMとして�
 
         ・・・中略・・・
 [realms]
-        # 下記の設定をコメント化、または、削除
-        #EXAMPLE.LOCAL = {
-        #       kdc = EXAMPLE.LOCAL
-        #       admin_server = EXAMPLE.LOCAL
-        #}
+        EXAMPLE.LOCAL = {
+                #kdc = EXAMPLE.LOCAL
+                #admin_server = EXAMPLE.LOCAL
+                kdc = dc1.example.local    
+                admin_server = dc1.example.local
+        }
 
         ・・・後略・・・
 ```
@@ -185,7 +187,9 @@ krb5-user インストール途中で EXAMPLE.LOCAL をKERBEROS REALMとして�
     ```
     
     ```bash
-    samba-tool dns query localhost example.local _ldap._tcp SRV 
+    samba-tool dns query localhost \
+        example.local _ldap._tcp SRV \
+        -U Administrator@EXAMPLE.LOCAL
     ```
     adminpass に設定したパスワードを入力する。
 
@@ -231,6 +235,7 @@ krb5-user インストール途中で EXAMPLE.LOCAL をKERBEROS REALMとして�
     ```bash
     sudo systemctl stop systemd-resolved
     sudo systemctl disable systemd-resolved
+    sudo rm /etc/resolve.conf    # 一度消した方がよいかもしれない
     ```
 
 - /etc/resolve.conf
@@ -259,15 +264,19 @@ krb5-user インストール途中で EXAMPLE.LOCAL をKERBEROS REALMとして�
 
 ### Samba AD サーバの自己証明書を信頼させる
 
-- Ubuntu 24.04 の設定
+- Samba サーバ
 
     ```bash
     sudo cp /var/lib/samba/private/tls/cert.pem /usr/local/share/ca-certificates/samba4.crt
     sudo update-ca-certificates
     ```
 
+- Keycloak サーバ
+
+    Samba サーバの /var/lib/samba/private/tls/cert.pem は scp 等を利用してコピーするものとします。
+
     ```bash
-    sudo cp ./cert.pem /usr/local/share/ca-certificates/samba4.crt
+    sudo cp /tmp/cert.pem /usr/local/share/ca-certificates/samba4.crt
     sudo update-ca-certificates
     ```
 
@@ -309,6 +318,10 @@ krb5-user インストール途中で EXAMPLE.LOCAL をKERBEROS REALMとして�
     ```
 
 - Keycloak 用サービスアカウントが Kerberos で利用する暗号アルゴリズムの指定
+
+    ```bash
+    sudo apt-get install -y ldb-tools
+    ```
 
     ```bash
     sudo ldbmodify -H /var/lib/samba/private/sam.ldb <<EOF
@@ -354,7 +367,6 @@ krb5-user インストール途中で EXAMPLE.LOCAL をKERBEROS REALMとして�
 
     ```bash
     # 権限設定
-    sudo chown keycloak:keycloak /opt/keycloak/keycloak.keytab
     sudo chmod 600 /opt/keycloak/keycloak.keytab
     ```
 
@@ -377,15 +389,99 @@ krb5-user インストール途中で EXAMPLE.LOCAL をKERBEROS REALMとして�
         ./kc.sh start-dev
     ```
 
+### AD 連携
+
+1. 左側メニューの一番下の **User federation** を選択
+2. User federation メニューから **Add LDAP provider**
+
+3. 設定
+
+    デフォルト値を変更した項目だけ記載する。
+
+    - Connection and authentication settings
+        - Connection URL:
+            - ldaps://dc1.example.local:636
+
+                ldap://dc1.example.local:389 を設定して **Enable StartTLS** を **On** でもよい気がしますが、**Save** ボタン押下時にエラーが出たので、StartTLS は諦めました。
+
+        - Bind DN: Administrator@EXAMPLE.LOCAL
+        - Bind credentials: Administrator パスワード
+
+    - LDAP searching and updating
+        - Edit mode: READ_ONLY
+        - Users DN: CN=Users,DC=example,DC=local
+        - Username LDAP attribute: sAMAccountName
+        - Search scope: Subtree
+
+    - Kerberos integration
+        - Kerberos realm: EXAMPLE.LOCAL
+        - Server principal: HTTP/keycloak.example.local@EXAMPLE.LOCAL
+        - Key tab: /opt/keycloak/keycloak.keytab
+        - Kerberos principal attribute: userPrincipalName
+        - Debug: On
+        - Use Kerberos for password authentication: On
+
+4. 動作確認
+
+    設定画面の各所で接続確認は実施できましたが、下記
+
+    User federation -> LDAP 画面の右上の **Action** から、**Sync all users** を選択すると、AD サーバに登録されているユーザを Keycloak に取り込むことができます。  
+    これに失敗する場合は、LDAP の設定がどこか間違っています。
+
+
+## Windows クライアントのドメイン参加準備
+
+### Samba サーバ
+
+- Samba AD の DNS に Keycloak サーバの A レコードを追加
+
+    ```bash
+    sudo samba-tool dns add \
+        dc1.example.local example.local \
+        keycloak A 192.168.222.20 -U Administrator
+    ```
+
+- SSO 動作確認用ユーザアカウント登録
+
+    ```bash
+    sudo samba-tool user create ynaka P@ssw0rD
+    ```
+
+### Keycloak サーバ
+
+User federation -> LDAP 画面の右上の **Action** から、**Sync changed users** を選択すると、ユーザが 1 アカウント追加された旨のメッセージが表示されると思います。
+
+
+## Windows クライアントの設定
+
+- 設定 -> ネットワークとインターネット -> イーサネット -> DNS サーバの割り当て -> 編集 ボタン押下
+
+    ![alt text](windows_dns_setting.png)
+
+    下記の ping コマンドで応答があれば OK。
+
+    ```powershell
+    ping dc1.example.local
+    ping keycloak.example.local
+    ```
+
+- 設定 -> システム -> バージョン情報 -> ドメインまたはワークグループ -> **変更(C)...** ボタンを押下
+
+    **所属するグループ** で **ドメイン** を選択し、テキストボックスに **example.local** を入力する。
+
+    ドメインに参加するためのアクセス許可のあるアカウントには Administrator を入力し、Administrator のパスワードを入力する。
+
+    ![alt text](image.png)
+
+    が表示されればドメインに参加できてます。  
+    再起動すると example.local ドメインのユーザで Windows にログインできるようになっていると思います。
 
 
 
 
 
 
-
-
-apt install ldap-utils
+apt install ldb-tools ldap-utils
 
 ldapsearch -x -H ldaps://dc1.example.local:636 \
     -D "CN=Administrator,CN=Users,DC=example,DC=local" \
@@ -397,19 +493,7 @@ ldapsearch -x -H ldaps://dc1.example.local:636 \
 
 
 
-Samba AD の DNS に A レコードを追加
 
-```bash
-sudo samba-tool dns add \
-    dc1.example.local example.local \
-    keycloak A 192.168.222.20 -U Administrator
-```
-
-Samba AD にユーザアカウントを追加
-
-```bash
-sudo samba-tool user create ynaka P@ssw0rD
-```
 
 
 Edge の設定
