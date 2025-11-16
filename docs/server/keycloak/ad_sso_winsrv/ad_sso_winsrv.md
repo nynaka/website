@@ -9,7 +9,7 @@ Keycloak と Samaba AD で Windows SSO
 
     | 項目      | 内容                |
     | :-------- | :------------------ |
-    | OS        | Windows Server 2204 |
+    | OS        | Windows Server 2022 |
     | ホスト名  | dc1                 |
     | ドメイン  | EXAMPLE.LOCAL       |
     | NetBIOS名 | EXAMPLE             |
@@ -147,8 +147,8 @@ Kerberos認証（SPNEGO）のために、Keycloakが使用するサービスア�
     ```powershell
     New-ADUser -Name "keycloak_svc" `
         -SamAccountName "keycloak_svc" `
-        -AccountPassword (ConvertTo-SecureString "P@ssw0rD" `
-        -AsPlainText -Force) `
+        -UserPrincipalName "keycloak_svc@EXAMPLE.LOCAL" `
+        -AccountPassword (ConvertTo-SecureString "P@ssw0rD" -AsPlainText -Force) `
         -Enabled $true
     ```
 
@@ -188,6 +188,7 @@ Kerberos認証（SPNEGO）のために、Keycloakが使用するサービスア�
     scp C:\keycloak.keytab ubuntu@192.168.222.20:/tmp
     ```
 
+
 ---
 
 ## Keycloak
@@ -198,16 +199,15 @@ Kerberos認証（SPNEGO）のために、Keycloakが使用するサービスア�
 
     ```yaml
     network:
-    version: 2
-    ethernets:
-      eth0:
-      dhcp4: no
-      addresses:
-        - 192.168.222.20/24
-      gateway4: 192.168.222.2
-      nameservers:
-        addresses:
-          - 192.168.222.10
+      ethernets:
+        ens32:
+          dhcp4: no
+          addresses:
+            - 192.168.222.20/24
+          gateway4: 192.168.222.2
+          nameservers:
+            addresses:
+              - 192.168.222.10
     ```
 
     ```bash
@@ -250,7 +250,7 @@ Kerberos認証（SPNEGO）のために、Keycloakが使用するサービスア�
 
 ### Windows の AD サーバが使用しているサーバ証明書の取得
 
-- OS の信頼する証明書への登録
+- OS の信頼する証明書への登録 (省略可)
 
     Windows Server で発行した自己証明書 (dc1-ldaps.cer.crt) を scp 等を利用して /tmp/dc1-ldaps.cer にコピーするものとする。
 
@@ -261,19 +261,27 @@ Kerberos認証（SPNEGO）のために、Keycloakが使用するサービスア�
 
 - Java の信頼する証明書
 
-    ```bash
-    sudo keytool -import -trustcacerts -alias dc1 \
-        -file /usr/local/share/ca-certificates/dc1-ldaps.cer.crt \
-        -keystore /usr/lib/jvm/java-1.21.0-openjdk-amd64/lib/security/cacerts \
-        -storepass changeit -noprompt
-    ```
-
-    - 追加できたことの確認
+    - Linux
 
         ```bash
-        sudo keytool -list \
+        sudo keytool -import -trustcacerts -alias dc1 \
+            -file /usr/local/share/ca-certificates/dc1-ldaps.cer.crt \
             -keystore /usr/lib/jvm/java-1.21.0-openjdk-amd64/lib/security/cacerts \
-            -storepass changeit | grep dc1
+            -storepass changeit -noprompt
+        ```
+
+        - 追加できたことの確認
+
+            ```bash
+            sudo keytool -list \
+                -keystore /usr/lib/jvm/java-1.21.0-openjdk-amd64/lib/security/cacerts \
+                -storepass changeit | grep dc1
+            ```
+
+    - Windows
+
+        ```powershell
+        & "C:\Program Files\Java\jdk-21\bin\keytool.exe" -importcert -alias keycloak01 -file "C:\dc1-ldaps.cer" -cacerts -storepass changeit -noprompt
         ```
 
 ### Keytab ファイルのコピー
@@ -294,15 +302,26 @@ sudo chmod 600 /opt/keycloak/keycloak.keytab
     sudo ./kc.sh build
     ```
 
-本番稼働は考えていないので、開発用で起動します。
-
 - Keycloak の起動 (開発用)
 
-    ```bash
-    KC_BOOTSTRAP_ADMIN_USERNAME=admin \
-        KC_BOOTSTRAP_ADMIN_PASSWORD=admin \
-        ./kc.sh start-dev
-    ```
+    本番稼働は考えていないので、開発用で起動します。
+
+    - Linux
+
+        ```bash
+        KC_BOOTSTRAP_ADMIN_USERNAME=admin \
+            KC_BOOTSTRAP_ADMIN_PASSWORD=admin \
+            ./kc.sh start-dev
+        ```
+
+    - Windows
+
+        ```powershell
+        $env:KC_BOOTSTRAP_ADMIN_USERNAME = "admin"
+        $env:KC_BOOTSTRAP_ADMIN_PASSWORD = "admin"
+
+        .\kc.bat start-dev
+        ```
 
 ### AD 連携
 
@@ -319,8 +338,8 @@ sudo chmod 600 /opt/keycloak/keycloak.keytab
 
                 ldap://dc1.example.local:389 を設定して **Enable StartTLS** を **On** でもよい気がしますが、**Save** ボタン押下時にエラーが出たので、StartTLS は諦めました。
 
-        - Bind DN: CN=keycloak_svc,CN=Users,DC=example,DC=local
-        - Bind credentials: keycloak_svc パスワード
+        - Bind DN: Administrator@EXAMPLE.LOCAL
+        - Bind credentials: Administrator のパスワード (ログインパスワード)
 
     - LDAP searching and updating
         - Edit mode: READ_ONLY
@@ -332,6 +351,7 @@ sudo chmod 600 /opt/keycloak/keycloak.keytab
         - Kerberos realm: EXAMPLE.LOCAL
         - Server principal: HTTP/keycloak.example.local@EXAMPLE.LOCAL
         - Key tab: /opt/keycloak/keycloak.keytab
+            - Windows 版 では **C:\keycloak.keytab** のように設定する。
         - Kerberos principal attribute: userPrincipalName
         - Debug: On
         - Use Kerberos for password authentication: On
@@ -343,6 +363,8 @@ sudo chmod 600 /opt/keycloak/keycloak.keytab
     User federation -> LDAP 画面の右上の **Action** から、**Sync all users** を選択すると、AD サーバに登録されているユーザを Keycloak に取り込むことができます。  
     これに失敗する場合は、LDAP の設定がどこか間違っています。
 
+
+---
 
 ## Windows クライアントのドメイン参加準備
 
@@ -372,6 +394,8 @@ sudo chmod 600 /opt/keycloak/keycloak.keytab
 User federation -> LDAP 画面の右上の **Action** から、**Sync changed users** を選択すると、ユーザが 1 アカウント追加された旨のメッセージが表示されると思います。
 
 
+---
+
 ## Windows クライアントの設定
 
 - 設定 -> ネットワークとインターネット -> イーサネット -> DNS サーバの割り当て -> 編集 ボタン押下
@@ -391,12 +415,7 @@ User federation -> LDAP 画面の右上の **Action** から、**Sync changed us
 
     ドメインに参加するためのアクセス許可のあるアカウントには Administrator を入力し、Administrator のパスワードを入力する。
 
-    ![alt text](image.png)
+    ![alt text](06_winsrv_win11_domjoin.png)
 
     が表示されればドメインに参加できてます。  
     再起動すると example.local ドメインのユーザで Windows にログインできるようになっていると思います。
-
-## 参考サイト
-
-- [とほほのKeycloak入門](https://www.tohoho-web.com/ex/keycloak.html)
-
