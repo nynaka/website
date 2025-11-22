@@ -1,4 +1,4 @@
-site_name: 過去のログ
+site_name: 過去ログ
 
 nav:
   - OS:
@@ -81,6 +81,7 @@ nav:
   - "言語":
     - C:
       - "Ubuntu22.04のcoreファイル出力": ./lang/c/corefile_ubuntu2404.md
+      - OpenSSL EVPインタフェースを使用した耐量子暗号アルゴリズム署名: ./lang/c/openssl_evp_qsig.md
       - PKCS11: ./lang/c/pkcs11_c.md
     - Nodejs:
       - "Node.jsのインストール": ./lang/nodejs/nodejs_install.md
