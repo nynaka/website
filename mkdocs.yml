@@ -20,6 +20,7 @@ nav:
     - Keycloak:
       - "Keycloak Samba AD Windows SSO": ./server/keycloak/ad_sso_samba/ad_sso_samba.md
       - "Keycloak Windows Server AD Windows SSO": ./server/keycloak/ad_sso_winsrv/ad_sso_winsrv.md
+      - "Keycloak Windows Server AD Windows SSO2": ./server/keycloak/ad_sso_winsrv2/ad_sso_winsrv.md
     - PostgreSQL: server/postgresql.md
     - Samba: server/samba.md
     - SSH:
