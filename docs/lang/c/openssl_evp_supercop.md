@@ -76,6 +76,13 @@ sudo apt install -y \
     cd ../..
     ```
 
+- インストールされている OpenSSL がサポートしているアルゴリズムの確認
+
+    ```bash
+    export LD_LIBRARY_PATH=/usr/local/lib64:$LD_LIBRARY_PATH
+    openssl list -signature-algorithms
+    ```
+
 - [SUPERCOP](https://bench.cr.yp.to/supercop.html)
 
     ```bash
