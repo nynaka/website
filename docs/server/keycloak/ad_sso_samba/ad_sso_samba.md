@@ -1,4 +1,4 @@
-Keycloak と Samaba AD で Windows SSO
+Samba AD と Keycloak 連携による Windows SSO 環境構築
 ===
 
 ## ネットワーク構成
@@ -11,9 +11,9 @@ Keycloak と Samaba AD で Windows SSO
     | :-------- | :------------------ |
     | OS        | Ubuntu Server 24.04 |
     | ホスト名  | dc1                 |
+    | IPv4      | 192.168.222.10      |
     | ドメイン  | EXAMPLE.LOCAL       |
     | NetBIOS名 | EXAMPLE             |
-    | IPv4      | 192.168.222.10      |
 
 - Keycloak
 
@@ -22,18 +22,22 @@ Keycloak と Samaba AD で Windows SSO
     | OS       | Ubuntu Server 24.04 |
     | ホスト名 | keycloak            |
     | IPv4     | 192.168.222.20      |
-    ❘ Keycloak | 26.4.4               |
+    | Keycloak | 26.4.5              |
+    | JDK      | OpenJDK (apt)       |
 
 - Windows Client
 
     | 項目 | 内容                |
     | :--- | :------------------ |
     | OS   | Windows 11 Pro 25H2 |
+    | IPv4 | DHCP                |
 
 
 ---
 
 ## Samba4 サーバ
+
+---
 
 ### Samba のインストール
 
@@ -55,16 +59,16 @@ krb5-user インストール途中で KERBEROS 関連の REALM として EXAMPLE
 
     ```yaml
     network:
-    version: 2
-    ethernets:
-      eth0:
-      dhcp4: no
-      addresses:
-        - 192.168.222.10/24
-      gateway4: 192.168.222.2
-      nameservers:
-        addresses:
-          - 127.0.0.1
+      version: 2
+      ethernets:
+        ens32:
+          dhcp4: no
+          addresses:
+            - 192.168.222.10/24
+          gateway4: 192.168.222.2
+          nameservers:
+            addresses:
+              - 127.0.0.1
     ```
 
     ```bash
@@ -79,13 +83,13 @@ krb5-user インストール途中で KERBEROS 関連の REALM として EXAMPLE
     sudo mv /etc/samba/smb.conf /etc/samba/smb.conf.origin
     ```
 
-- 既存の AD 関連ファイル削除 (最初からやり直す場合)
+- 既存の AD 関連ファイル削除 (最初からやり直す場合に実行する)
 
     ```bash
-    # Samba 関連プロセスの停止
+    ### Samba 関連プロセスの停止
     sudo systemctl stop samba-ad-dc
     sudo systemctl stop smbd nmbd winbind
-    # AD 関連ファイル削除
+    ### AD 関連ファイル削除
     sudo rm -rf /var/lib/samba/private/*
     ```
 
@@ -114,12 +118,16 @@ krb5-user インストール途中で KERBEROS 関連の REALM として EXAMPLE
     ```bash
     sudo systemctl stop systemd-resolved
     sudo systemctl disable systemd-resolved
-    sudo rm /etc/resolve.conf    # 一度消した方がよいかもしれない
+    sudo rm /etc/resolv.conf        # 一度消した方がよいかもしれない
     ```
 
 - AD 関連プロセスの起動
 
     ```bash
+    ### Samba 関連デーモンの停止
+    sudo systemctl stop smbd nmbd winbind
+    sudo systemctl disable smbd nmbd winbind
+    ### AD DC の起動
     sudo systemctl enable samba-ad-dc
     sudo systemctl start samba-ad-dc
     sudo systemctl status samba-ad-dc
@@ -179,32 +187,60 @@ krb5-user インストール途中で KERBEROS 関連の REALM として EXAMPLE
 
 - Samba の DNS 関連の確認
 
-    ```bash
-    samba-tool domain level show
-    samba-tool user list
-    host -t SRV _ldap._tcp.example.local
-    host -t SRV _kerberos._tcp.example.local
-    ```
-    
-    ```bash
-    samba-tool dns query localhost \
-        example.local _ldap._tcp SRV \
-        -U Administrator@EXAMPLE.LOCAL
-    ```
-    adminpass に設定したパスワードを入力する。
+    - ドメインレベルの確認
+
+        ```bash
+        samba-tool domain level show
+        ```
+
+        フォレスト、ドメインともに機能レベルは Windows Server 2008 R2 だと思います。
+
+    - AD 登録ユーザの確認
+
+        ```bash
+        samba-tool user list
+        ```
+
+        AD に登録されているユーザアカウント (Administrator、krbtgt、Guest) 一覧が表示されると思います。
+
+    - SRV レコードの確認
+
+        ```bash
+        host -t SRV _ldap._tcp.example.local
+        host -t SRV _kerberos._tcp.example.local
+        ```
+
+        どちらのコマンドも共に **dc1.example.local.** が SRV レコードに設定されている旨の結果が表示されると思います。
+
+        - samba-tool コマンドでの確認
+
+            ```bash
+            samba-tool dns query localhost \
+                example.local _ldap._tcp SRV \
+                -U Administrator@EXAMPLE.LOCAL
+            ```
+
+            AD ドメインをプロビジョニング したとき adminpass に設定したパスワードを入力します。
 
 - Kerberos 認証の確認
 
     ```bash
+    ### チケットの取得
     kinit Administrator
     # または
     kinit Administrator@EXAMPLE.LOCAL
+
+    ### 取得したチケットの確認
+    klist
     ```
-    adminpass に設定したパスワードを入力する。
+
+    AD ドメインをプロビジョニング したとき adminpass に設定したパスワードを入力します。
 
 ---
 
-## Keycloak
+## Keycloak サーバ
+
+---
 
 ### IP アドレスの固定
 
@@ -212,33 +248,33 @@ krb5-user インストール途中で KERBEROS 関連の REALM として EXAMPLE
 
     ```yaml
     network:
-    version: 2
-    ethernets:
-      eth0:
-      dhcp4: no
-      addresses:
-        - 192.168.222.20/24
-      gateway4: 192.168.222.2
-      nameservers:
-        addresses:
-          - 192.168.222.10
+      version: 2
+      ethernets:
+        ens32:
+          dhcp4: no
+          addresses:
+            - 192.168.222.20/24
+          gateway4: 192.168.222.2
+          nameservers:
+            addresses:
+              - 192.168.222.10
     ```
 
     ```bash
     sudo netplan apply
     ```
 
-### /etc/resolve.conf
+### /etc/resolv.conf
 
 - systemd-resolved を止める
 
     ```bash
     sudo systemctl stop systemd-resolved
     sudo systemctl disable systemd-resolved
-    sudo rm /etc/resolve.conf    # 一度消した方がよいかもしれない
+    sudo rm /etc/resolv.conf        # 一度消した方がよいかもしれない
     ```
 
-- /etc/resolve.conf
+- /etc/resolv.conf
 
     ```text
     nameserver 192.168.222.10
@@ -257,9 +293,9 @@ krb5-user インストール途中で KERBEROS 関連の REALM として EXAMPLE
 
     ```bash
     cd /opt
-    wget https://github.com/keycloak/keycloak/releases/download/26.4.4/keycloak-26.4.4.zip
-    unzip keycloak-26.4.4.zip
-    mv keycloak-26.4.4 keycloak
+    wget https://github.com/keycloak/keycloak/releases/download/26.4.5/keycloak-26.4.5.zip
+    unzip keycloak-26.4.5.zip
+    mv keycloak-26.4.5 keycloak
     ```
 
 ### Samba AD サーバの自己証明書を信頼させる
@@ -267,7 +303,8 @@ krb5-user インストール途中で KERBEROS 関連の REALM として EXAMPLE
 - Samba サーバ
 
     ```bash
-    sudo cp /var/lib/samba/private/tls/cert.pem /usr/local/share/ca-certificates/samba4.crt
+    sudo cp /var/lib/samba/private/tls/cert.pem \
+        /usr/local/share/ca-certificates/samba4.crt
     sudo update-ca-certificates
     ```
 
@@ -276,7 +313,8 @@ krb5-user インストール途中で KERBEROS 関連の REALM として EXAMPLE
     Samba サーバの /var/lib/samba/private/tls/cert.pem は scp 等を利用してコピーするものとします。
 
     ```bash
-    sudo cp /tmp/cert.pem /usr/local/share/ca-certificates/samba4.crt
+    sudo cp /tmp/cert.pem \
+        /usr/local/share/ca-certificates/samba4.crt
     sudo update-ca-certificates
     ```
 
@@ -302,9 +340,11 @@ krb5-user インストール途中で KERBEROS 関連の REALM として EXAMPLE
 - サービスアカウント作製
 
     ```bash
-    # サービスアカウント登録
-    sudo samba-tool user create keycloak_svc "P@ssw0rD" --given-name=Keycloak --surname=Service
-    # 確認
+    ### サービスアカウント登録
+    sudo samba-tool user create \
+        keycloak_svc "P@ssw0rD" \
+        --given-name=Keycloak --surname=Service
+    ### 確認
     samba-tool user show keycloak_svc
     ```
 
@@ -312,12 +352,13 @@ krb5-user インストール途中で KERBEROS 関連の REALM として EXAMPLE
 
     ```bash
     # SPN 作成
-    sudo samba-tool spn add HTTP/keycloak.example.local keycloak_svc
+    sudo samba-tool spn add \
+        HTTP/keycloak.example.local keycloak_svc
     # 確認
     sudo samba-tool spn list keycloak_svc
     ```
 
-- Keycloak 用サービスアカウントが Kerberos で利用する暗号アルゴリズムの指定
+- Kerberos で利用する暗号アルゴリズムの指定
 
     ```bash
     sudo apt-get install -y ldb-tools
@@ -431,15 +472,50 @@ krb5-user インストール途中で KERBEROS 関連の REALM として EXAMPLE
 
 ## Windows クライアントのドメイン参加準備
 
+---
+
 ### Samba サーバ
 
-- Samba AD の DNS に Keycloak サーバの A レコードを追加
+- Samba AD の DNS に Keycloak サーバのレコード追加
 
-    ```bash
-    sudo samba-tool dns add \
-        dc1.example.local example.local \
-        keycloak A 192.168.222.20 -U Administrator
-    ```
+    - 正引き
+
+        ```bash
+        sudo samba-tool dns add \
+            dc1.example.local example.local \
+            keycloak A 192.168.222.20 -U Administrator
+        ```
+
+    - 逆引き
+
+        - ゾーンの作成 (未作成の場合)
+
+            ```bash
+            sudo samba-tool dns zonecreate \
+                dc1.example.local 222.168.192.in-addr.arpa \
+                -U Administrator
+            ```
+
+        - 逆引きレコードの追加
+
+            ```bash
+            sudo samba-tool dns add \
+                dc1.example.local 222.168.192.in-addr.arpa \
+                20 PTR keycloak.example.local \
+                -U Administrator
+            ```
+
+    - 正引き・逆引きの確認
+
+        ```bash
+        ### dc1 の確認
+        nslookup dc1.example.local
+        nslookup 192.168.222.10
+
+        ### keycloak の確認
+        nslookup keycloak.example.local
+        nslookup 192.168.222.20
+        ```
 
 - SSO 動作確認用ユーザアカウント登録
 
@@ -452,7 +528,67 @@ krb5-user インストール途中で KERBEROS 関連の REALM として EXAMPLE
 User federation -> LDAP 画面の右上の **Action** から、**Sync changed users** を選択すると、ユーザが 1 アカウント追加された旨のメッセージが表示されると思います。
 
 
-## Windows クライアントの設定
+## サーバ設定時にあると便利な物
+
+- ping コマンド
+
+    ```bash
+    sudo apt install -y inetutils-ping
+    ```
+
+- ルーティングテーブルの確認
+
+    ```bash
+    sudo ip route
+    ```
+
+- 通信ポートをバインドしてるプロセスの確認 (一覧)
+
+    ```bash
+    ss -antp
+    ```
+
+- 通信ポートのバインド確認 (ポート個別)
+
+    ```bash title="ポート番号 53 の例"
+    ### lsof コマンドのインストール
+    sudo apt install lsof
+
+    ### ポート53がバインドされているか確認
+    sudo lsof -i :53
+    ```
+
+- LDAP の接続確認
+
+    Keycloak の設定で、AD サーバに LDAP でつながらない時の調査で役立ちます。
+
+    - ldap-utils のインストール
+
+        ```bash
+        sudo apt install -y ldap-utils
+        ```
+
+    - DN (Distinguished Name) 形式
+
+        ```bash
+        ldapsearch -x -H ldaps://dc1.example.local:636 \
+            -D "CN=Administrator,CN=Users,DC=example,DC=local" \
+            -W -b "DC=example,DC=local"
+        ```
+
+    - UPN (User Principal Name) 形式
+
+        ```bash
+        ldapsearch -x -H ldaps://dc1.example.local:636 \
+            -D "Administrator@EXAMPLE.LOCAL" \
+            -W -b "DC=example,DC=local"
+        ```
+
+## Windows クライアント
+
+---
+
+### 設定
 
 - 設定 -> ネットワークとインターネット -> イーサネット -> DNS サーバの割り当て -> 編集 ボタン押下
 
@@ -471,37 +607,32 @@ User federation -> LDAP 画面の右上の **Action** から、**Sync changed us
 
     ドメインに参加するためのアクセス許可のあるアカウントには Administrator を入力し、Administrator のパスワードを入力する。
 
-    ![alt text](image.png)
+    ![alt text](windows_domainjoin.png)
 
     が表示されればドメインに参加できてます。  
     再起動すると example.local ドメインのユーザで Windows にログインできるようになっていると思います。
 
+### 動作確認
 
+Windows11 にログイン後、Edge を起動し、**http://keycloak:8080/** を参照して、Keycloak のパスワード認証無しにログインできれば、とりあえず、設定完了です。
 
+### ブラウザが送信している Negotiate トークンの確認方法
 
+1. Edge ブラウザのアドレスバーに **edge://net-internals/#events** を入力する。
+2. **edge://net-internals/#events** 画面内の **edge://net-internals/#events** リンクを選択する。
+3. 下記画面に遷移するので、
 
+    - Include raw bytes (will include cookies and credentials) を選択
+    - Maximum log size を 100 MB 程度
 
-apt install ldb-tools ldap-utils
+    に設定して、**Start Logging to Disk** ボタンを押下。
 
-ldapsearch -x -H ldaps://dc1.example.local:636 \
-    -D "CN=Administrator,CN=Users,DC=example,DC=local" \
-    -W -b "DC=example,DC=local"
+4. 出力ファイルを設定すると、Edge ブラウザで発生するイベントをファイル出力します。
 
-ldapsearch -x -H ldaps://dc1.example.local:636 \
-    -D "Administrator@EXAMPLE.LOCAL" \
-    -W -b "DC=example,DC=local"
+    イベントログ採取時は、ブラウザの設定でニュースや広告、背景画像等を無効化し、アドオンも無効化するなどして、通信を最小限まで減らしてから実行することをお勧めします。10 秒程度の操作ログでも 50 MB 程度出力されるため、解析が困難になります。
 
+5. 出力された JSON ファイルをテキストエディタで開き、**Authorization: Negotiate** や **kerberos** というキーワードで検索してヒットした行周辺を確認すると Negotiate トークンを取得できます。
 
-
-
-
-
-Edge の設定
-- profile を
-- コントロールパネルのイントラネットのサイトで「*.example.local」をイントラネット登録する
-
-
-## 参考サイト
-
-- [とほほのKeycloak入門](https://www.tohoho-web.com/ex/keycloak.html)
-
+    ```text title="出力例"
+    {"params":{"headers":["Host: keycloak.example.local:8080","Connection: keep-alive","Authorization: Negotiate YIIHQQYGKwYBBQUCoII... (長いので以下省略)
+    ```
