@@ -82,6 +82,7 @@ nav:
     - C:
       - "Ubuntu22.04のcoreファイル出力": ./lang/c/corefile_ubuntu2404.md
       - OpenSSL EVPインタフェースを使用した耐量子暗号アルゴリズム署名: ./lang/c/openssl_evp_qsig.md
+      - OpenSSL EVPインタフェースを使用した耐量子暗号アルゴリズム署名の性能測定: ./lang/c/openssl_evp_supercop.md
       - PKCS11: ./lang/c/pkcs11_c.md
     - Nodejs:
       - "Node.jsのインストール": ./lang/nodejs/nodejs_install.md
