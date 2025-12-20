@@ -1,5 +1,9 @@
-Samba AD と Keycloak 連携による Windows SSO 環境構築
+Samba AD DC と Keycloak を用いた Windows SSO 環境の構築
 ===
+
+## 概要
+
+このドキュメントでは、Samba AD DC（Active Directory Domain Controller）とKeycloakを連携させたWindows SSO（Single Sign-On）環境の構築手順を説明します。ネットワーク構成から各サーバの設定、Windowsクライアントのドメイン参加までをカバーします。**注意**: パスワードはサンプルです。本番環境では強力なパスワードを使用し、定期的に変更してください。
 
 ## ネットワーク構成
 
@@ -32,12 +36,9 @@ Samba AD と Keycloak 連携による Windows SSO 環境構築
     | OS   | Windows 11 Pro 25H2 |
     | IPv4 | DHCP                |
 
-
 ---
 
 ## Samba4 サーバ
-
----
 
 ### Samba のインストール
 
@@ -86,10 +87,11 @@ krb5-user インストール途中で KERBEROS 関連の REALM として EXAMPLE
 - 既存の AD 関連ファイル削除 (最初からやり直す場合に実行する)
 
     ```bash
-    ### Samba 関連プロセスの停止
+    # Samba 関連プロセスの停止
     sudo systemctl stop samba-ad-dc
     sudo systemctl stop smbd nmbd winbind
-    ### AD 関連ファイル削除
+
+    # AD 関連ファイル削除
     sudo rm -rf /var/lib/samba/private/*
     ```
 
@@ -124,10 +126,11 @@ krb5-user インストール途中で KERBEROS 関連の REALM として EXAMPLE
 - AD 関連プロセスの起動
 
     ```bash
-    ### Samba 関連デーモンの停止
+    # Samba 関連デーモンの停止
     sudo systemctl stop smbd nmbd winbind
     sudo systemctl disable smbd nmbd winbind
-    ### AD DC の起動
+
+    # AD DC の起動
     sudo systemctl enable samba-ad-dc
     sudo systemctl start samba-ad-dc
     sudo systemctl status samba-ad-dc
@@ -165,23 +168,21 @@ krb5-user インストール途中で KERBEROS 関連の REALM として EXAMPLE
 
 - /etc/krb5.conf
 
-```ini
-[libdefaults]
-        default_realm = EXAMPLE.LOCAL
-        dns_lookup_realm = true         # この行追加
-        dns_lookup_kdc = true           # この行追加
-
-        ・・・中略・・・
-[realms]
-        EXAMPLE.LOCAL = {
-                #kdc = EXAMPLE.LOCAL
-                #admin_server = EXAMPLE.LOCAL
-                kdc = dc1.example.local    
-                admin_server = dc1.example.local
-        }
-
-        ・・・後略・・・
-```
+    ```ini
+    [libdefaults]
+            default_realm = EXAMPLE.LOCAL
+            dns_lookup_realm = true         # この行追加
+            dns_lookup_kdc = true           # この行追加
+            ・・・中略・・・
+    [realms]
+            EXAMPLE.LOCAL = {
+                    #kdc = EXAMPLE.LOCAL
+                    #admin_server = EXAMPLE.LOCAL
+                    kdc = dc1.example.local
+                    admin_server = dc1.example.local
+            }
+            ・・・後略・・・
+    ```
 
 ### 動作確認
 
@@ -240,8 +241,6 @@ krb5-user インストール途中で KERBEROS 関連の REALM として EXAMPLE
 
 ## Keycloak サーバ
 
----
-
 ### IP アドレスの固定
 
 - /etc/netplan/50-cloud-init.yaml
@@ -289,7 +288,7 @@ krb5-user インストール途中で KERBEROS 関連の REALM として EXAMPLE
     sudo apt install -y openjdk-21-jdk unzip
     ```
 
-- Kyecloack のインストール
+- Keycloak のインストール
 
     ```bash
     cd /opt
@@ -340,11 +339,12 @@ krb5-user インストール途中で KERBEROS 関連の REALM として EXAMPLE
 - サービスアカウント作製
 
     ```bash
-    ### サービスアカウント登録
+    # サービスアカウント登録
     sudo samba-tool user create \
         keycloak_svc "P@ssw0rD" \
         --given-name=Keycloak --surname=Service
-    ### 確認
+
+    # 確認
     samba-tool user show keycloak_svc
     ```
 
@@ -354,6 +354,7 @@ krb5-user インストール途中で KERBEROS 関連の REALM として EXAMPLE
     # SPN 作成
     sudo samba-tool spn add \
         HTTP/keycloak.example.local keycloak_svc
+
     # 確認
     sudo samba-tool spn list keycloak_svc
     ```
@@ -378,7 +379,7 @@ krb5-user インストール途中で KERBEROS 関連の REALM として EXAMPLE
         | 10進数 | 2進数             | アルゴリズム            |
         | :----- | :---------------- | :---------------------- |
         | 8      | 0x08 (0b00001000) | AES128-CTS-HMAC-SHA1-96 |
-        | 16     | 0x10 (0b00010000) | AES256-CTS-HMAC-SHA1-96 |                         
+        | 16     | 0x10 (0b00010000) | AES256-CTS-HMAC-SHA1-96 |
 
         二つのアルゴリズムの2進数値を OR すると 0b00011000 になり、10進数に変換すると24になるので「暗号アルゴリズムはAES128とAES256を使用する」という意味になります。
 
@@ -440,7 +441,9 @@ krb5-user インストール途中で KERBEROS 関連の REALM として EXAMPLE
     デフォルト値を変更した項目だけ記載する。
 
     - Connection and authentication settings
+
         - Connection URL:
+
             - ldaps://dc1.example.local:636
 
                 ldap://dc1.example.local:389 を設定して **Enable StartTLS** を **On** でもよい気がしますが、**Save** ボタン押下時にエラーが出たので、StartTLS は諦めました。
@@ -449,12 +452,14 @@ krb5-user インストール途中で KERBEROS 関連の REALM として EXAMPLE
         - Bind credentials: Administrator パスワード
 
     - LDAP searching and updating
+
         - Edit mode: READ_ONLY
         - Users DN: CN=Users,DC=example,DC=local
         - Username LDAP attribute: sAMAccountName
         - Search scope: Subtree
 
     - Kerberos integration
+
         - Kerberos realm: EXAMPLE.LOCAL
         - Server principal: HTTP/keycloak.example.local@EXAMPLE.LOCAL
         - Key tab: /opt/keycloak/keycloak.keytab
@@ -467,12 +472,10 @@ krb5-user インストール途中で KERBEROS 関連の REALM として EXAMPLE
     設定画面の各所で接続確認は実施できましたが、下記
 
     User federation -> LDAP 画面の右上の **Action** から、**Sync all users** を選択すると、AD サーバに登録されているユーザを Keycloak に取り込むことができます。  
+
     これに失敗する場合は、LDAP の設定がどこか間違っています。
 
-
 ## Windows クライアントのドメイン参加準備
-
----
 
 ### Samba サーバ
 
@@ -508,11 +511,11 @@ krb5-user インストール途中で KERBEROS 関連の REALM として EXAMPLE
     - 正引き・逆引きの確認
 
         ```bash
-        ### dc1 の確認
+        # dc1 の確認
         nslookup dc1.example.local
         nslookup 192.168.222.10
 
-        ### keycloak の確認
+        # keycloak の確認
         nslookup keycloak.example.local
         nslookup 192.168.222.20
         ```
@@ -527,8 +530,7 @@ krb5-user インストール途中で KERBEROS 関連の REALM として EXAMPLE
 
 User federation -> LDAP 画面の右上の **Action** から、**Sync changed users** を選択すると、ユーザが 1 アカウント追加された旨のメッセージが表示されると思います。
 
-
-## サーバ設定時にあると便利な物
+## サーバ設定時にあると便利なもの
 
 - ping コマンド
 
@@ -551,10 +553,10 @@ User federation -> LDAP 画面の右上の **Action** から、**Sync changed us
 - 通信ポートのバインド確認 (ポート個別)
 
     ```bash title="ポート番号 53 の例"
-    ### lsof コマンドのインストール
+    # lsof コマンドのインストール
     sudo apt install lsof
 
-    ### ポート53がバインドされているか確認
+    # ポート53がバインドされているか確認
     sudo lsof -i :53
     ```
 
@@ -585,8 +587,6 @@ User federation -> LDAP 画面の右上の **Action** から、**Sync changed us
         ```
 
 ## Windows クライアント
-
----
 
 ### 設定
 
