@@ -8,7 +8,8 @@ sudo apt update
 sudo apt install -y \
     ssh \
     vim git man manpages-ja \
-    curl jq wget zip unzip bzip2 p7zip-full
+    curl jq wget zip unzip bzip2 p7zip-full \
+    python3-venv
 ```
 
 ## [Docker](https://docs.docker.com/engine/install/ubuntu/)
@@ -65,6 +66,18 @@ sudo apt install -y \
     sudo systemctl start docker
     ```
 
+## プログラミング言語
 
+- Python 仮想環境
 
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
+
+- 開発ツール
+
+    ```bash
+    pip install bandit isort ruff
+    ```
 
