@@ -205,7 +205,7 @@ Debian Linux 12
     SSH では一定時間、クライアントから応答がないと自動的に切断する機能があり、デフォルト値 (ClientAliveInterval=0) の場合、応答確認は行わずに切断する、という設定なのですが、たいていはかなりの時間、接続が維持されます。  
     ただ、よくわからないタイミングで切断されることを回避したい場合は、下記のように ClientAliveInterval と ClientAliveCountMax を設定すると `ClientAliveInterval * ClientAliveCountMax` 秒間、無応答でも接続が維持されるようになります。
 
-    ```/etc/ssh/sshd_config
+    ```text title="/etc/ssh/sshd_config"
     #ClientAliveInterval 0
     #ClientAliveCountMax 3
     ↓

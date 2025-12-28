@@ -5,9 +5,10 @@ nav:
     - BSD:
       - FreeBSD: os/bsd/freebsd14.md
     - Linux:
-      - Debian: os/linux/debian_12.md
+      - Debian12: os/linux/debian_12.md
       - Fedora 40 Server: os/linux/fedora_40_server.md
       - XUbutnu 22.04: os/linux/xubuntu_2204.md
+      - Ubuntu 24.04 (WSL): os/linux/ubuntu2404_wsl.md
       - VyOS: os/linux/vyos.md
     - MacOS Tips: os/macos/macos_tips.md
     - Windows:
