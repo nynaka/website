@@ -10,7 +10,7 @@ GitLab Container
     |-- certs/  
     |-- docker-compose.yaml
 
-### サーバ証明書の用意
+## サーバ証明書の用意
 
 GitLab コンテナ構築時にサーバ証明書も用意してくれるのですが、有効期限が 1 カ月と短く、gitlab-runner を使うときに支障が出るので、自前のサーバ証明書を用意します。  
 秘密鍵はパスワードを設定するか、SoftHSM のようなアプリで管理すべきだと思いますが、自分しか使用者がいないので、その辺は考えないことにしています。  
@@ -67,12 +67,30 @@ GitLab コンテナ構築時にサーバ証明書も用意してくれるので�
             -extfile san.txt
         ```
 
-### コンテナの用意
+### 自己 CA を信頼する CA リストに追加する
+
+!!!note
+    これをしないと、gitlab-runner を使おうとしたときに自己 CA 証明書が信頼されないので、自動テストが必ずエラーになります。
+
+- Debian / Ubuntu
+
+    ```bash
+    sudo cp ca.crt /usr/local/share/ca-certificates/privateca.crt
+    sudo update-ca-certificates
+    この後、/etc/ssl/certs/privateca.pem が存在するはずです。
+    ```
+
+- Python (Requests ライブラリだけかもですが)
+
+    Python では OS の信頼する CA リストは参照せず、/usr/lib/python3/dist-packages/certifi/cacert.pem または venv/lib/python3.10/site-packages/certifi/cacert.pem のような、Python環境の信頼する CA リストを参照しているようです。  
+    このファイルに PrivateCA の証明書を追加すると requests が PrivateCA を信頼するようになります。
+
+
+## コンテナの用意
 
 - docker-compose.yaml
 
 ```yaml
-version: '3'
 services:
   gitlab:
     image: 'gitlab/gitlab-ce:17.5.1-ce.0'
@@ -93,13 +111,6 @@ services:
       - './volume/data:/var/opt/gitlab'
       - './certs:/etc/gitlab/ssl'
     shm_size: '256m'
-
-  #gitlab-runner:
-  #  image: gitlab/gitlab-runner:latest
-  #  restart: always
-  #  volumes:
-  #    - ./volume/gitlab-runner/config:/etc/gitlab-runner
-  #    - /var/run/docker.sock:/var/run/docker.sock
 ```
 
 - [Install GitLab using Docker](https://docs.gitlab.com/ee/install/docker.html)
@@ -130,3 +141,50 @@ services:
     ```
 
     ![](./gitlab/00_gitlab_login.png)
+
+
+## Gitlab Runner
+
+Runner のインストール方法は Girlab リポジトリの
+
+> Settings
+>   -> Ci/CD
+>   -> Runners
+>   -> Available Runners 右端の3点メニュー
+>   -> Show runner installation and registration instructions
+
+から参照できます。
+
+- バイナリの手動インストール
+
+    ```bash
+    # Download the binary for your system
+    sudo curl -L \
+        --output /usr/local/bin/gitlab-runner https://gitlab-runner-downloads.s3.amazonaws.com/latest/binaries/gitlab-runner-linux-amd64
+
+    # Give it permission to execute
+    sudo chmod +x /usr/local/bin/gitlab-runner
+
+    # Create a GitLab Runner user
+    sudo useradd --comment 'GitLab Runner' --create-home gitlab-runner --shell /bin/bash
+
+    # Install and run as a service
+    sudo gitlab-runner install --user=gitlab-runner --working-directory=/home/gitlab-runner
+    sudo gitlab-runner start
+    ```
+
+- Debian / Ubuntu
+
+    ```bash
+    # If using a `deb` package based distribution
+    curl -s https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh | sudo bash
+    sudo apt install -y gitlab-runner
+    ```
+
+- RHEL / Fedora
+
+    ```bash
+    # If using an `rpm` package based distribution
+    curl -s https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.rpm.sh | sudo bash
+    sudo dnf install -y gitlab-runner
+    ```
