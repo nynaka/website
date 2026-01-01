@@ -61,6 +61,7 @@ nav:
     - OpenSSL:
       - 自己証明書: app/openssl_self-certification.md
     - SoftHSM: app/softhsm.md
+    - SUPERCOP: app/supercop.md
     - Tripwire: app/tripwire.md
     - vim:
       - ctags: app/vim_ctags.md
