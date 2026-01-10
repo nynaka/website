@@ -1,17 +1,18 @@
-SUPERCOP
+暗号アルゴリズムの性能測定
 ===
 
-## インストール
+## 依存パッケージ
 
-### 依存パッケージ
+ここでは SUPERCOP で性能測定を行い、valgrind でメモリ使用量を測定します。
 
 ```bash
 sudo apt update
 sudo apt install -y build-essential git curl python3 \
-    libssl-dev pkg-config make autoconf automake
+    libssl-dev pkg-config make autoconf automake \
+	valgrind
 ```
 
-### SUPERCOP の入手と初期化
+## SUPERCOP の入手と初期化
 
 - [開発元サイト](https://bench.cr.yp.to/supercop.html) の手順
 
@@ -87,13 +88,17 @@ gcc -march=native -mtune=native -O3 -fwrapv -fPIC -fPIE -gdwarf-4 -Wall
 ここで重要なのは **./bench/ホスト名ディレクトリ/** が作成され、その中にいろいろなファイルが生成されることになります。
 
 
-## 測定の実行
+### 測定の実行
 
 !!! note
     ここでは RSA3072 のキーペア作成、署名、署名検証の処理性能測定を例にします。  
     測定用コード格納ディレクトリは **crypto_sign/rsa3072/ref/** とします。
 
-### 測定用コードの用意
+#### 測定用コードの用意
+
+```bash
+mkdir -p crypto_sign/rsa3072/ref/
+```
 
 ```c title="crypto_sign/rsa3072/ref/api.h"
 #ifndef __API_H__
@@ -293,13 +298,13 @@ int crypto_sign_open(unsigned char* m, unsigned long long* mlen,
 }
 ```
 
-### 測定の実行
+#### 測定の実行
 
 ```bash
 ./do-part crypto_sign rsa3072
 ```
 
-### 測定結果の集計
+#### 測定結果の集計
 
 測定結果は CPU のサイクルで出力されるため、秒に変換します。  
 gawk がインストールされていないとエラーになります。
@@ -402,3 +407,14 @@ gawk がインストールされていないとエラーになります。
 
     !!! note
 		データの集計や現状把握には秒数を用いるのが直感的ですが、公開されているベンチマーク等の外部データと今回の測定結果を比較し、妥当性を検証する際にはCPUサイクル数が指標となるケースが多いため、両方の値を記録しておくことが有用です。
+
+
+---
+
+## メモリおよび出力データサイズの測定
+
+- 鍵作成⇒署名⇒署名検証のメモリ使用量を一気通貫で測定すると、測定結果から該当箇所を切り出すことが困難であるため、鍵作成だけ、署名だけ、署名検証だけの3回に区切って測定する。
+- 性能測定で作成した **crypto_sign/rsa3072/ref/** のコードを利用するため、crypto_sign/rsa3072/ref/ を作業ディレクトリとする。
+
+
+
