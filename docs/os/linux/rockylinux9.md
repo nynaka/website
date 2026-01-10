@@ -29,6 +29,12 @@ Rocky Linux9
     ssh-keygen -t ed25519 -C "rocky@rocky9.local"
     ```
 
+- 秘密鍵から公開鍵を作成する
+
+    ```bash
+    ssh-keygen -y -f [秘密鍵のファイルパス] > [作成する公開鍵のファイルパス]
+    ```
+
 - 公開鍵の登録
 
     ```bash
@@ -76,4 +82,59 @@ Rocky Linux9
     ```
 
 
+### VMware Workstation Pro 共有フォルダ
 
+- open-vm-tools のインストール
+
+    ```bash
+    # パッケージの更新（推奨）
+    sudo dnf update -y
+
+    # open-vm-tools と関連ツールのインストール
+    sudo dnf install open-vm-tools open-vm-tools-desktop -y
+
+    # サービスが有効か確認し、起動
+    sudo systemctl enable --now vmtoolsd
+    ```
+
+- VMware の共有フォルダが見えているか確認
+
+    ```bash
+    vmware-hgfsclient
+    ```
+
+    ここでは **_share** が表示されたものとします。
+
+- マウントポイント作成
+
+    ```bash
+    sudo mkdir -p /mnt/hgfs
+    ```
+
+- 手動マウント
+
+    ```bash
+    sudo vmhgfs-fuse .host:/ /mnt/hgfs -o allow_other -o auto_unmount
+    ```
+
+- 自動マウント
+
+    - /etc/fstab に追記
+
+        ```bash
+        .host:/    /mnt/hgfs    fuse.vmhgfs-fuse    allow_other,defaults    0    0
+        ```
+
+    - マウント
+
+        ```bash
+        sudo systemctl daemon-reload
+        mount -a
+        ```
+
+        /mnt/hgfs/_share/ から共有フォルダに接続できます。
+
+
+## PostgreSQL
+
+[How to Install PostgreSQL 18 in Rocky Linux | Atlantic.Net](https://www.atlantic.net/dedicated-server-hosting/how-to-install-postgresql-18-in-rocky-linux/)
