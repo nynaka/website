@@ -7,9 +7,10 @@ nav:
     - Linux:
       - Debian12: os/linux/debian_12.md
       - Fedora 40 Server: os/linux/fedora_40_server.md
-      - XUbutnu 22.04: os/linux/xubuntu_2204.md
+      - Rocky Linux 9: ./os/linux/rockylinux9.md
       - Ubuntu 24.04 (WSL): os/linux/ubuntu2404_wsl.md
       - VyOS: os/linux/vyos.md
+      - XUbutnu 22.04: os/linux/xubuntu_2204.md
     - MacOS Tips: os/macos/macos_tips.md
     - Windows:
       - Windows Tips: os/windows/windows_tips.md
@@ -57,6 +58,7 @@ nav:
   - "アプリ":
     - Ansible: app/ansible.md
     - ClamAV: app/clamav.md
+    - Gemini CLI: app/gemini_cli.md
     - Ollama: app/ollama.md
     - OpenSSL:
       - 自己証明書: app/openssl_self-certification.md
