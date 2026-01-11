@@ -219,7 +219,7 @@ Kerberos認証（SPNEGO）のために、Keycloakが使用するサービスア�
     [Microsoft Build of OpenJDK をダウンロードする](https://learn.microsoft.com/ja-jp/java/openjdk/download#openjdk-21) から OpenJDK をダウンロードし、インストールする。  
     Microsoft Build of OpenJDK は、特に何も変更しなければ C:\Program Files\Microsoft\jdk-21.0.9.10-hotspot にインストールされます。
 
-- Kyecloack のインストール
+- Keycloack のインストール
 
     [keycloak.org](https://www.keycloak.org/downloads) または [Github](https://github.com/keycloak/keycloak) から keycloak-26.4.5.zip をダウンロードし、C:\keycloak に展開する。
 
@@ -391,7 +391,7 @@ nslookup 192.168.222.10
 nslookup 192.168.222.20
 ```
 
-### ユーザカウントの同期
+### ユーザアカウントの同期
 
 Keycloak に Admin 権限でログインし、User federation -> LDAP 画面の右上の **Action** から、**Sync changed users** を選択すると、ユーザが 1 アカウント追加された旨のメッセージが表示されると思います。
 
