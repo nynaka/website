@@ -1,11 +1,12 @@
-site_name: 過去ログ
+site_name: 備忘録
 
 nav:
   - OS:
     - BSD:
       - FreeBSD: os/bsd/freebsd14.md
     - Linux:
-      - Debian12: os/linux/debian_12.md
+      - Debian12: os/linux/debian12.md
+      - Debian13: os/linux/debian13.md
       - Fedora 40 Server: os/linux/fedora_40_server.md
       - Rocky Linux 9: ./os/linux/rockylinux9.md
       - Ubuntu 24.04 (WSL): os/linux/ubuntu2404_wsl.md
