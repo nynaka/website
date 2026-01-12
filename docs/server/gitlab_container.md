@@ -75,7 +75,7 @@ GitLab コンテナ構築時にサーバ証明書も用意してくれるので�
 - Debian / Ubuntu
 
     ```bash
-    sudo cp ca.crt /usr/local/share/ca-certificates/privateca.crt
+    sudo cp privateca.crt /usr/local/share/ca-certificates/privateca.crt
     sudo update-ca-certificates
     この後、/etc/ssl/certs/privateca.pem が存在するはずです。
     ```
