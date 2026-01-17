@@ -9,7 +9,7 @@ nav:
       - Debian13: os/linux/debian13.md
       - Fedora 40 Server: os/linux/fedora_40_server.md
       - Rocky Linux 9: ./os/linux/rockylinux9.md
-      - Ubuntu 24.04 (WSL): os/linux/ubuntu2404_wsl.md
+      - Ubuntu 24.04: os/linux/ubuntu2404.md
       - VyOS: os/linux/vyos.md
       - XUbutnu 22.04: os/linux/xubuntu_2204.md
     - MacOS Tips: os/macos/macos_tips.md

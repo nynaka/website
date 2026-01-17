@@ -81,3 +81,29 @@ sudo apt install -y \
     pip install bandit isort ruff
     ```
 
+
+## 仮想化環境用ツール
+
+### VMware tools
+
+- インストール
+
+    ```bash
+    sudo apt install -y open-vm-tools open-vm-tools-desktop
+    ```
+
+- 起動設定
+
+    ```bash
+    sudo systemctl start open-vm-tools
+    sudo systemctl enable open-vm-tools
+    ```
+
+- /etc/fstab 設定例
+
+    ```bash
+    .host:/ /mnt/hgfs fuse.vmhgfs-fuse allow_other,auto_unmount,defaults 0 0
+    ```
+
+    - 事前に sudo mkdir -p /mnt/hgfs 等でマウントポイントとなるディレクトリを作成しておいてください。
+    - VMware Workstation で共有フォルダの設定を有効にしておいて下さい。
