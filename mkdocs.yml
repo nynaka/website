@@ -79,7 +79,8 @@ nav:
   - Ethereum:
     - "Ethereum概要": ./ethereum/ethereum_overview.md
     - Web3Signer:
-      - "Web3Signerの署名動作確認": ./ethereum/web3signer_file-keystore.md
+      - "Web3Signerの署名動作確認 (file-keystore)": ./ethereum/web3signer_file-keystore.md
+      - "Web3Signerの署名動作確認 (hashicorp-vault)": ./ethereum/web3signer_hashicorp-vault.md
       - "Web3Signer(Hardhat)": ./ethereum/web3signer_hardhat.md
 
   - "言語":

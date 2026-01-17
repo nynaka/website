@@ -3,11 +3,11 @@ Web3Signer の署名動作確認
 
 ## 動作環境
 
-|            |                                     |
-| :--------- | :---------------------------------- |
-| OS         | Ubuntu 24.04 (WSL Docker Container) |
-| JDK        | Open JDK 21.0.7                     |
-| Web3Signer | 25.6.0                              |
+|            |                 |
+| :--------- | :-------------- |
+| OS         | Ubuntu 24.04    |
+| JDK        | Open JDK 21.0.9 |
+| Web3Signer | 25.12.0         |
 
 
 ## keystore 形式のアカウント作成
@@ -79,14 +79,14 @@ sudo apt install -y openjdk-21-jdk
     - ビルド済みバイナリの取得と展開
 
         ```bash
-        wget https://github.com/Consensys/web3signer/releases/download/25.6.0/web3signer-25.6.0.tar.gz
-        tar zxvf web3signer-25.6.0.tar.gz -C $HOME
+        wget https://github.com/Consensys/web3signer/releases/download/25.12.0/web3signer-25.12.0.tar.gz
+        tar zxvf web3signer-25.12.0.tar.gz -C $HOME
         ```
 
     - PATH の設定
 
         ```bash
-        echo 'export PATH=$HOME/web3signer-25.6.0/bin:$PATH' >> $HOME/.bashrc
+        echo 'export PATH=$HOME/web3signer-25.12.0/bin:$PATH' >> $HOME/.bashrc
         source $HOME/.bashrc
         ```
 
