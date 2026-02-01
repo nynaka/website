@@ -11,7 +11,7 @@ nav:
       - Rocky Linux 9: ./os/linux/rockylinux9.md
       - Ubuntu 24.04: os/linux/ubuntu2404.md
       - VyOS: os/linux/vyos.md
-      - XUbutnu 22.04: os/linux/xubuntu_2204.md
+      - XXubuntu 24.04: os/linux/xubuntu2404.md
     - MacOS Tips: os/macos/macos_tips.md
     - Windows:
       - Windows Tips: os/windows/windows_tips.md

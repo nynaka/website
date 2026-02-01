@@ -1,4 +1,4 @@
-Xubuntu Linux 22.04
+Xubuntu Linux 24.04
 ===
 
 ## 設定
@@ -101,9 +101,9 @@ Xubuntu Linux 22.04
     - [Microsoft Edge](https://www.microsoft.com/ja-jp/edge?form=MA13FJ)
 
         ```bash
-        wget https://packages.microsoft.com/repos/edge/pool/main/m/microsoft-edge-stable/microsoft-edge-stable_130.0.2849.56-1_amd64.deb?brand=M102 \
-            -O /tmp/microsoft-edge-stable_130.0.2849.56-1_amd64.deb
-        sudo dpkg -i /tmp/microsoft-edge-stable_130.0.2849.56-1_amd64.deb
+        wget https://packages.microsoft.com/repos/edge/pool/main/m/microsoft-edge-stable/microsoft-edge-stable_144.0.3719.92-1_amd64.deb?brand=M102 \
+            -O /tmp/microsoft-edge-stable_144.0.3719.92-1_amd64.deb
+        sudo dpkg -i /tmp/microsoft-edge-stable_144.0.3719.92-1_amd64.deb
         ```
 
     - [Eclipse](https://www.eclipse.org/)
@@ -300,9 +300,9 @@ Xubuntu Linux 22.04
 - [UDEV Gothic](https://github.com/yuru7/udev-gothic)
 
     ```bash
-    wget https://github.com/yuru7/udev-gothic/releases/download/v2.0.0/UDEVGothic_HS_v2.0.0.zip -O /tmp/UDEVGothic_HS.zip
-    wget https://github.com/yuru7/udev-gothic/releases/download/v2.0.0/UDEVGothic_NF_v2.0.0.zip -O /tmp/UDEVGothic_NF.zip
-    wget https://github.com/yuru7/udev-gothic/releases/download/v2.0.0/UDEVGothic_v2.0.0.zip -O /tmp/UDEVGothic.zip
+    wget https://github.com/yuru7/udev-gothic/releases/download/v2.1.0/UDEVGothic_HS_v2.1.0.zip -O /tmp/UDEVGothic_HS.zip
+    wget https://github.com/yuru7/udev-gothic/releases/download/v2.1.0/UDEVGothic_NF_v2.1.0.zip -O /tmp/UDEVGothic_NF.zip
+    wget https://github.com/yuru7/udev-gothic/releases/download/v2.1.0/UDEVGothic_v2.1.0.zip -O /tmp/UDEVGothic.zip
     mkdir -p .fonts/udev_gothic
     cd .fonts/udev_gothic
     unzip /tmp/UDEVGothic_HS.zip
@@ -354,10 +354,6 @@ Xubuntu Linux 22.04
 
         - 事前に sudo mkdir -p /mnt/hgfs 等でマウントポイントとなるディレクトリを作成しておいてください。
         - VMware Workstation で共有フォルダの設定を有効にしておいて下さい。
-
-    - 参考サイト
-
-        - [ubuntu 18.04インストール (2) vmware tools](http://verifiedby.me/adiary/0118)
 
 
 - VirtualBoxの共有フォルダのマウント
