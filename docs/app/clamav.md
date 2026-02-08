@@ -64,7 +64,7 @@ ClamAV
 - GUI ツール
 
     ```bash
-    sudo apt install clamtk
+    sudo apt install -y clamtk
     ```
 
 

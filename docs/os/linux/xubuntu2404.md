@@ -220,6 +220,35 @@ Xubuntu Linux 24.04
             }
             ```
 
+## セキュリティ
+
+### ファイアウォール
+
+- ufw (Uncomplicated Firewall)
+
+    ```bash
+    # インストール
+    sudo apt install -y ufw
+
+    # 現在の状態を確認 (おそらく inactive になっている)
+    sudo ufw status
+
+    # すべての外部からのアクセスを拒否し、内部からのアクセスのみ許可
+    sudo ufw default deny incoming
+    sudo ufw default allow outgoing
+
+    # SSH接続を許可 (重要: これをしないとリモートから締め出される可能性があります)
+    sudo ufw allow ssh
+
+    # ファイアウォールを有効化
+    sudo ufw enable
+    ```
+
+
+### ウイルス対策
+
+- [ClamAV](../../app/clamav.md)
+
 
 ## プログラミング言語
 
@@ -278,9 +307,8 @@ Xubuntu Linux 24.04
             jupyter jupyterlab
         ```
 
-        > [!NOTE]
-        > 
-        > sklearn だけでは import sklearn がエラーになる。sklearn と scikit-learn は別ものらしい。
+        !!! note
+            sklearn だけでは import sklearn がエラーになる。sklearn と scikit-learn は別ものらしい。
 
 - Rust
 
@@ -313,7 +341,7 @@ Xubuntu Linux 24.04
 
 ## リモートデスクトップ
 
-- xrdp　のインストール
+- xrdp のインストール
 
     ```bash
     sudo apt install -y xrdp
@@ -349,12 +377,18 @@ Xubuntu Linux 24.04
     - /etc/fstab 設定例
 
         ```bash
-        .host:/ /mnt/hgfs fuse.vmhgfs-fuse allow_other,auto_unmount,defaults 0 0
+        sudo bash -c 'echo ".host:/ /mnt/hgfs fuse.vmhgfs-fuse allow_other,auto_unmount,defaults 0 0" >> /etc/fstab'
         ```
 
         - 事前に sudo mkdir -p /mnt/hgfs 等でマウントポイントとなるディレクトリを作成しておいてください。
         - VMware Workstation で共有フォルダの設定を有効にしておいて下さい。
 
+    - mount コマンド
+
+        ```bash
+        sudo systemctl daemon-reload
+        sudo mount -a
+        ```
 
 - VirtualBoxの共有フォルダのマウント
 
