@@ -33,19 +33,64 @@
         make && sudo make install
         ```
 
+### PKCS11 ライブラリの位置
+
+- パッケージ管理でインストールした場合
+
+    - Debian 系 Linux (Debian Linux、Ubuntu Linux 他)
+
+        > /usr/lib/softhsm/libsofthsm2.so
+
+- ソースからビルドした場合
+
+    > /usr/local/lib/softhsm/libsofthsm2.so
+
+
+## softhsm2-util
+
+`softhsm2-util` は SoftHSM トークンを初期化および管理するためのコマンドラインツールです。
+
+- トークン情報の表示
+
+    ```bash
+    softhsm2-util --show-slots
+    ```
+
+- トークンの初期化
+
+    ```bash
+    # softhsm2-util --init-token --slot <slot> --label <label>
+    softhsm2-util --init-token --slot 0 --label "softhsm-token"
+    ```
+
+    SO (Security Officer) PIN と user PIN の設定を求められます。
+
+    > Please enter the new SO PIN:
+    > Please re-enter the new SO PIN:
+    > Please enter the new user PIN:
+    > Please re-enter the new user PIN:
+
+- 鍵のインポート
+
+    ```bash
+    # softhsm2-util --import <path> --slot <slot> --label <label> --id <hex-id>
+    softhsm2-util --import mykey.pem --slot 0 --label "mykey" --id 1234
+    ```
 
 ## PKCS11 での操作
 
 - サポートアルゴリズムの確認
 
     ```bash
-    pkcs11-tool --module /usr/local/lib/softhsm/libsofthsm2.so -M
+    export PKCS11_LIB=/usr/local/lib/softhsm/libsofthsm2.so
+    pkcs11-tool --module $PKCS11_LIB -M
     ```
 
 - トークンの初期化
 
     ```bash
-    pkcs11-tool --module /usr/local/lib/softhsm/libsofthsm2.so \
+    export PKCS11_LIB=/usr/local/lib/softhsm/libsofthsm2.so
+    pkcs11-tool --module $PKCS11_LIB \
         --init-token \
         --slot 0 \
         --so-pin 1234 \
@@ -55,7 +100,8 @@
 - User PIN の設定
 
     ```bash
-    pkcs11-tool --module /usr/local/lib/softhsm/libsofthsm2.so \
+    export PKCS11_LIB=/usr/local/lib/softhsm/libsofthsm2.so
+    pkcs11-tool --module $PKCS11_LIB \
         --init-pin \
         --so-pin 1234 \
         --pin 1234
@@ -64,7 +110,8 @@
 - スロット番号の確認
 
     ```bash
-    pkcs11-tool --module /usr/local/lib/softhsm/libsofthsm2.so -L
+    export PKCS11_LIB=/usr/local/lib/softhsm/libsofthsm2.so
+    pkcs11-tool --module $PKCS11_LIB -L
     ```
 
 - 鍵作成
@@ -72,37 +119,55 @@
     - 対称鍵
 
         ```bash
-        sudo pkcs11-tool --module $LIBPATH \
+        export PKCS11_LIB=/usr/local/lib/softhsm/libsofthsm2.so
+        pkcs11-tool --module $PKCS11_LIB \
             --keygen \
             --key-type AES:32 \
             --label "aeskey" \
-            --login --pin 4321
+            --login --pin 1234
         ```
 
     - RSA キーペア
 
         ```bash
-        sudo pkcs11-tool --module $LIBPATH \
+        export PKCS11_LIB=/usr/local/lib/softhsm/libsofthsm2.so
+        pkcs11-tool --module $PKCS11_LIB \
             --keypairgen \
-            --key-type rsa:2048 \
+            --key-type rsa:4096 \
             --label "rsakey" \
-            --login --pin 4321
+            --login --pin 1234
         ```
 
     - ECDSA キーペア
 
         ```bash
-        sudo pkcs11-tool --module $LIBPATH \
+        export PKCS11_LIB=/usr/local/lib/softhsm/libsofthsm2.so
+        pkcs11-tool --module $PKCS11_LIB \
             --keypairgen \
             --key-type EC:prime256v1 \
             --label "ecdsakey" \
-            --login --pin 4321
+            --login --pin 1234
         ```
+
+    - EdDSA(ed25519) キーペア
+
+        ```bash
+        export PKCS11_LIB=/usr/local/lib/softhsm/libsofthsm2.so
+        pkcs11-tool --module $PKCS11_LIB \
+            --keypairgen \
+            --key-type EC:edwards25519 \
+            --label "ed25519key" \
+            --login --pin 1234
+        ```
+
+        !!! note
+            **--key-type** には **curve25519** も指定できますが、こちらは ECDH の X25519 になります。
 
 - 登録鍵一覧の取得
 
     ```bash
-    pkcs11-tool --module /usr/local/lib/softhsm/libsofthsm2.so -O \
+    export PKCS11_LIB=/usr/local/lib/softhsm/libsofthsm2.so
+    pkcs11-tool --module $PKCS11_LIB -O \
         --login \
         --pin 1234
     ```
