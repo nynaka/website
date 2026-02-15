@@ -35,15 +35,12 @@
 
 ### PKCS11 ライブラリの位置
 
-- パッケージ管理でインストールした場合
-
-    - Debian 系 Linux (Debian Linux、Ubuntu Linux 他)
-
-        > /usr/lib/softhsm/libsofthsm2.so
-
-- ソースからビルドした場合
-
-    > /usr/local/lib/softhsm/libsofthsm2.so
+| OS                                                  | ライブラリパス                        |
+| :-------------------------------------------------- | :------------------------------------ |
+| Debian 系 Linux (Debian Linux、Ubuntu Linux 他)     | /usr/lib/softhsm/libsofthsm2.so       |
+| Redhat 系 Linux (Fedora、Alma Linux、RockyLinux 他) | /usr/lib64/softhsm/libsofthsm.so      |
+| ソースからビルドした場合                            | /usr/local/lib/softhsm/libsofthsm2.so |
+|                                                     |                                       |
 
 
 ## softhsm2-util
@@ -60,7 +57,7 @@
 
     ```bash
     # softhsm2-util --init-token --slot <slot> --label <label>
-    softhsm2-util --init-token --slot 0 --label "softhsm-token"
+    softhsm2-util --init-token --slot 0 --label "SoftHSM Token"
     ```
 
     SO (Security Officer) PIN と user PIN の設定を求められます。
@@ -79,18 +76,22 @@
 
 ## PKCS11 での操作
 
+- PKCS11 ライブラリパスの設定
+
+    ```bash
+    export PKCS11_MODULE_PATH="/usr/lib64/softhsm/libsofthsm.so"
+    ```
+
 - サポートアルゴリズムの確認
 
     ```bash
-    export PKCS11_LIB=/usr/local/lib/softhsm/libsofthsm2.so
-    pkcs11-tool --module $PKCS11_LIB -M
+    pkcs11-tool --module $PKCS11_MODULE_PATH -M
     ```
 
 - トークンの初期化
 
     ```bash
-    export PKCS11_LIB=/usr/local/lib/softhsm/libsofthsm2.so
-    pkcs11-tool --module $PKCS11_LIB \
+    pkcs11-tool --module $PKCS11_MODULE_PATH \
         --init-token \
         --slot 0 \
         --so-pin 1234 \
@@ -100,8 +101,7 @@
 - User PIN の設定
 
     ```bash
-    export PKCS11_LIB=/usr/local/lib/softhsm/libsofthsm2.so
-    pkcs11-tool --module $PKCS11_LIB \
+    pkcs11-tool --module $PKCS11_MODULE_PATH \
         --init-pin \
         --so-pin 1234 \
         --pin 1234
@@ -110,8 +110,7 @@
 - スロット番号の確認
 
     ```bash
-    export PKCS11_LIB=/usr/local/lib/softhsm/libsofthsm2.so
-    pkcs11-tool --module $PKCS11_LIB -L
+    pkcs11-tool --module $PKCS11_MODULE_PATH -L
     ```
 
 - 鍵作成
@@ -119,8 +118,7 @@
     - 対称鍵
 
         ```bash
-        export PKCS11_LIB=/usr/local/lib/softhsm/libsofthsm2.so
-        pkcs11-tool --module $PKCS11_LIB \
+        pkcs11-tool --module $PKCS11_MODULE_PATH \
             --keygen \
             --key-type AES:32 \
             --label "aeskey" \
@@ -130,8 +128,7 @@
     - RSA キーペア
 
         ```bash
-        export PKCS11_LIB=/usr/local/lib/softhsm/libsofthsm2.so
-        pkcs11-tool --module $PKCS11_LIB \
+        pkcs11-tool --module $PKCS11_MODULE_PATH \
             --keypairgen \
             --key-type rsa:4096 \
             --label "rsakey" \
@@ -141,8 +138,7 @@
     - ECDSA キーペア
 
         ```bash
-        export PKCS11_LIB=/usr/local/lib/softhsm/libsofthsm2.so
-        pkcs11-tool --module $PKCS11_LIB \
+        pkcs11-tool --module $PKCS11_MODULE_PATH \
             --keypairgen \
             --key-type EC:prime256v1 \
             --label "ecdsakey" \
@@ -152,8 +148,7 @@
     - EdDSA(ed25519) キーペア
 
         ```bash
-        export PKCS11_LIB=/usr/local/lib/softhsm/libsofthsm2.so
-        pkcs11-tool --module $PKCS11_LIB \
+        pkcs11-tool --module $PKCS11_MODULE_PATH \
             --keypairgen \
             --key-type EC:edwards25519 \
             --label "ed25519key" \
@@ -166,11 +161,91 @@
 - 登録鍵一覧の取得
 
     ```bash
-    export PKCS11_LIB=/usr/local/lib/softhsm/libsofthsm2.so
-    pkcs11-tool --module $PKCS11_LIB -O \
+    pkcs11-tool --module $PKCS11_MODULE_PATH -O \
         --login \
         --pin 1234
     ```
+
+
+## OpenSSL コマンド化利用する
+
+!!! note
+    openssl 3.0.x のように古い OpenSSL だと、謎のコアダンプに悩まされることがあるようです。  
+    Ubuntu 24.04 で試してみたら、Github Copilot でも解決できなかった。
+
+### PKCS11 Engine (OpenSSL3 から非推奨)
+
+#### インストール
+
+- Debian 系 Linux (Debian Linux、Ubuntu Linux 他)
+
+    ```bash
+    sudo apt install -y libengine-pkcs11-openssl
+    ```
+
+- Redhat 系 Linux (Fedora、Alma Linux、Rocky Linux)
+
+    ```bash
+    sudo dnf install -y openssl-pkcs11
+    ```
+
+#### 使い方
+
+- PKCS11 ライブラリパスの設定
+
+    ```bash
+    export PKCS11_MODULE_PATH="/usr/local/lib/softhsm/libsofthsm2.so"
+    ```
+
+- 自己署名証明書の作成
+
+    !!! note
+        自己証明書を 自己 CA 証明書として使用することを想定しています。
+
+    ```bash
+    openssl req -new -x509 -days 3650 \
+        -engine pkcs11 \
+        -keyform engine \
+        -key "pkcs11:token=SoftHSM Token;object=rsakey;type=private;pin-value=1234" \
+        -out selfsigned.crt \
+        -subj "/CN=example.com" \
+        -addext "subjectAltName=DNS:example.com,DNS:localhost,IP:127.0.0.1"
+    ```
+
+- CSR (Certificate Signing Request：証明書署名要求) の作成
+
+    ```bash
+    openssl req -new \
+        -engine pkcs11 \
+        -keyform engine \
+        -key "pkcs11:token=SoftHSM Token;object=user-rsakey;type=private;pin-value=1234" \
+        -out request.csr \
+        -subj "/CN=host1.example.com" \
+        -addext "subjectAltName=DNS:host1.example.com,DNS:localhost,IP:127.0.0.1"
+    ```
+
+- CRT (Certificate: デジタル証明書) の作成 (CSR に署名を付ける)
+
+    ```bash
+    # SoftHSM内のCA鍵を使って、request.csr に署名し user.crt を作る
+    openssl x509 -req -days 365 \
+        -in request.csr \
+        -CA selfsigned.crt \
+        -CAkey "pkcs11:token=SoftHSM Token;object=rsakey;type=private;pin-value=1234" \
+        -engine pkcs11 \
+        -CAkeyform engine \
+        -CAcreateserial \
+        -out user.crt
+    ```
+
+### PKCS11 Provider (OpenSSL3 から推奨)
+
+#### インストール
+
+```bash
+sudo apt install -y pkcs11-provider
+```
+
 
 
 ## サンプルコード
@@ -185,7 +260,7 @@
 
     """ 設定 """
     # PKCS11 モジュールのパス
-    PKCS11_LIB = "/usr/local/lib/softhsm/libsofthsm2.so"
+    PKCS11_MODULE_PATH = "/usr/local/lib/softhsm/libsofthsm2.so"
 
     # User PIN
     PIN = "1234"
@@ -195,7 +270,7 @@
     if __name__ == "__main__":
         # PKCS11 モジュールを初期化
         pkcs11 = PyKCS11.PyKCS11Lib()
-        pkcs11.load(PKCS11_LIB)
+        pkcs11.load(PKCS11_MODULE_PATH)
 
         # スロットを取得
         slots = pkcs11.getSlotList()
