@@ -67,7 +67,8 @@ Xubuntu Linux 24.04
     - Libre Office
 
         ```bash
-        sudo apt install -y libreoffice libreoffice-l10n-ja libreoffice-help-ja
+        sudo apt install -y \
+            libreoffice libreoffice-l10n-ja libreoffice-help-ja
         ```
 
     - 画像、動画
@@ -255,7 +256,9 @@ Xubuntu Linux 24.04
 - C/C++
 
     ```bash
-    sudo apt-get install -y build-essential gdb cmake autoconf exuberant-ctags
+    sudo apt-get install -y \
+        build-essential gdb cmake autoconf \
+        universal-ctags
     ```
 
 - Go
@@ -293,7 +296,7 @@ Xubuntu Linux 24.04
     - Python 本体
 
         ```bash
-        sudo apt install -y python3 python3-pip python3-venv
+        sudo apt install -y python3 python3-venv
         ```
 
     - データサイエンス
@@ -338,6 +341,60 @@ Xubuntu Linux 24.04
     unzip /tmp/UDEVGothic.zip
     ```
 
+## [Docker](https://docs.docker.com/engine/install/ubuntu/)
+
+* 関連ツールのインストール
+
+    ```bash
+    sudo apt-get update
+    sudo apt-get -y install \
+        ca-certificates \
+        curl
+    ```
+
+* GPG key のインストール
+
+    ```bash
+    sudo install -m 0755 -d /etc/apt/keyrings
+    sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+        -o /etc/apt/keyrings/docker.asc
+    sudo chmod a+r /etc/apt/keyrings/docker.asc
+    ```
+
+* リポジトリの追加
+
+    ```bash
+    sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
+    Types: deb
+    URIs: https://download.docker.com/linux/ubuntu
+    Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+    Components: stable
+    Signed-By: /etc/apt/keyrings/docker.asc
+    EOF
+    ```
+
+* Docker のインストール
+
+    ```bash
+    sudo apt-get update
+    sudo apt install -y \
+        docker-ce docker-ce-cli \
+        containerd.io docker-buildx-plugin \
+        docker-compose-plugin
+    ```
+
+* ユーザ権限の設定
+
+    ```bash
+    sudo usermod -aG docker ubuntu
+    ```
+
+* 自動起動設定
+
+    ```bash
+    sudo systemctl enable docker
+    sudo systemctl start docker
+    ```
 
 ## リモートデスクトップ
 
