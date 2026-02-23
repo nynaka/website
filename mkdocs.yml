@@ -63,6 +63,7 @@ nav:
     - Ansible: app/ansible.md
     - ClamAV: app/clamav.md
     - Gemini CLI: app/gemini_cli.md
+    - GitHub Copilot CLI: app/github_copilot_cli.md
     - Ollama: app/ollama.md
     - OpenSSL:
       - 自己証明書: app/openssl_self-certification.md
